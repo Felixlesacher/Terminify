@@ -4,7 +4,7 @@ Tags: events, institutions, newsletter, brevo, blocks
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -108,6 +108,9 @@ No. After activation the plugin is in test mode and sends no emails. Live sendin
 Not in this version. Use "Duplicate event" to copy an event as a draft and adjust the date.
 
 == Changelog ==
+
+= 1.2.1 =
+* Fixed: deleting an event, job, news item, institution or account now removes all of its data, also when WP-Cron empties the trash, when WP-CLI deletes it or when an institution account deletes its own entry. Before, some internal fields could remain in the database. Data of other entries stays protected as before.
 
 = 1.2.0 =
 * New: one-click updates. New versions are published as releases in the public GitHub repository and appear under Plugins like any other update. Content, accounts and settings are kept.

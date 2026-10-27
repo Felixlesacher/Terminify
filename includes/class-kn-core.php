@@ -5,6 +5,8 @@ final class KN_Core {
     private static $trusted = false;
     private static $term_guard = false;
     private static $saving = false;
+    // IDs of entries and users that are being deleted right now; their metadata may be removed by anyone who deletes them (cron, WP-CLI, institution accounts).
+    private static $deleting = array( 'post' => array(), 'user' => array() );
     const TOPICS = array( 'Vortrag', 'Gesundheit', 'Bildung', 'Kunst und Kultur', 'Anthroposophie', 'Religion', 'Esoterik und Spiritualität' );
     const ORG_TYPES = array( 'Schule', 'Gesundheit', 'Kunst und Kultur', 'Religion', 'Esoterik und Spiritualität' );
     const FIELDS = array( 'location', 'public_info', 'internal_info', 'workload', 'deadline', 'application', 'email', 'phone', 'address', 'city', 'website', 'donation', 'donation_url', 'mail_mode', 'source', 'registration_url', 'cancelled' );
@@ -37,6 +39,11 @@ final class KN_Core {
             add_filter( 'update_' . $meta_type . '_metadata_by_mid', function ( $check, $mid, $value, $new_key ) use ( $meta_type ) { return self::guard_mid( $check, $meta_type, $mid, $value, $new_key, false ); }, 10, 4 );
             add_filter( 'delete_' . $meta_type . '_metadata_by_mid', function ( $check, $mid ) use ( $meta_type ) { return self::guard_mid( $check, $meta_type, $mid, null, false, true ); }, 10, 2 );
         }
+        // wp_delete_post() removes the metadata between before_delete_post and delete_post; the mark ends right there, even if the deletion stops afterwards.
+        add_action( 'before_delete_post', array( __CLASS__, 'deleting_post' ), 10, 2 );
+        add_action( 'delete_post', array( __CLASS__, 'release_post' ) );
+        add_action( 'delete_user', array( __CLASS__, 'deleting_user' ) );
+        add_action( 'deleted_user', array( __CLASS__, 'release_user' ) );
         add_action( 'set_object_terms', array( __CLASS__, 'guard_topics' ), 20, 6 );
         add_action( 'pre_get_posts', array( __CLASS__, 'scope_query' ) );
         add_filter( 'posts_where', array( __CLASS__, 'scope_read_where' ), 20, 2 );
@@ -304,10 +311,19 @@ final class KN_Core {
             do_action( 'kn_content_saved', $id );
         } finally { self::$saving = false; }
     }
+    /** Remembers entries of the plugin while WordPress deletes them: their metadata must go with them, whoever (or whatever, like cron) deletes. */
+    public static function deleting_post( $post_id, $post = null ) {
+        if ( in_array( get_post_type( $post_id ), self::types(), true ) ) self::$deleting['post'][ (int) $post_id ] = true;
+    }
+    public static function release_post( $post_id ) { unset( self::$deleting['post'][ (int) $post_id ] ); }
+    public static function deleting_user( $user_id ) { self::$deleting['user'][ (int) $user_id ] = true; }
+    public static function release_user( $user_id ) { unset( self::$deleting['user'][ (int) $user_id ] ); }
     public static function guard_meta( $check, $id, $key, $value, $extra ) {
         // delete_metadata() without an object, or with delete_all, deletes a key on all posts; plugin keys stay with administrators.
         $bulk = ! $id || ( ! empty( $extra ) && 'delete_post_metadata' === current_filter() );
         if ( $bulk && ! self::$trusted && ! self::is_admin() && 0 === strpos( (string) $key, '_kn_' ) ) return false;
+        // The metadata of an entry that is being deleted is removed with it (only this entry, and only deleting).
+        if ( ! $bulk && 'delete_post_metadata' === current_filter() && isset( self::$deleting['post'][ (int) $id ] ) ) return $check;
         if ( self::$trusted || self::is_admin() || ! in_array( get_post_type( $id ), self::types(), true ) ) return $check;
         $guarded = 0 === strpos( $key, '_kn_' ) || '_thumbnail_id' === $key;
         if ( ! $guarded ) return $check;
@@ -330,6 +346,8 @@ final class KN_Core {
         $id_key = $type . '_id'; $id = (int) $row->$id_key; $old_key = $row->meta_key;
         $next_key = false === $new_key ? $old_key : $new_key;
         if ( ! is_string( $next_key ) ) return false;
+        // Deleting an entry or a user removes its metadata, whoever deletes it.
+        if ( $delete && isset( self::$deleting[ $type ][ $id ] ) ) return $check;
         if ( 'user' === $type ) {
             if ( '_kn_institution_id' === $old_key || '_kn_institution_id' === $next_key ) return false;
             return $check;
@@ -340,7 +358,11 @@ final class KN_Core {
         if ( $old_key !== $next_key || ( $delete && '_kn_org' === $old_key ) ) return false;
         return self::guard_meta( $check, $id, $old_key, $delete ? $row->meta_value : $value, null );
     }
-    public static function guard_user_meta( $check, $id, $key, $value, $extra ) { return '_kn_institution_id' === $key && ! self::$trusted && ! self::is_admin() ? false : $check; }
+    public static function guard_user_meta( $check, $id, $key, $value, $extra ) {
+        if ( '_kn_institution_id' !== $key || self::$trusted || self::is_admin() ) return $check;
+        // The assignment of a user that is being deleted goes with the user (only this user, and only deleting).
+        return empty( $extra ) && 'delete_user_metadata' === current_filter() && isset( self::$deleting['user'][ (int) $id ] ) ? $check : false;
+    }
     public static function guard_topics( $id, $terms, $tt_ids, $taxonomy, $append, $old_tt_ids ) {
         if ( self::$term_guard || 'kn_topic' !== $taxonomy || 'kn_event' !== get_post_type( $id ) ) return;
         $current = wp_get_object_terms( $id, $taxonomy, array( 'fields' => 'ids' ) );
