@@ -1,10 +1,10 @@
-=== konstanth – Einrichtungen, Termine & Rundmails ===
+=== konstanth – Einrichtungen, Veranstaltungen & Rundmails ===
 Contributors: konstanth
 Tags: events, institutions, newsletter, brevo, blocks
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.2.1
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,13 +16,14 @@ konstanth supports the collaboration of anthroposophic institutions on an existi
 
 **Components as blocks and shortcodes**
 
-* Gutenberg blocks in the block category "konstanth", each with a live preview in the editor and settings in the sidebar: Events (with filters, list and month calendar), Jobs, Institutions, News, Donations and Newsletter signup.
+* Gutenberg blocks in the block category "konstanth", each with a live preview in the editor and settings in the sidebar: Events (with filters, list and month calendar), Upcoming events (the next events side by side for the home page, with a button to all events), Jobs, Institutions, News, Donations and Newsletter signup.
 * Settings: institution (all or one), items per page (1-100), layout (list or grid) and an optional heading.
-* Shortcodes keep working: [konstanth_events], [konstanth_jobs], [konstanth_institutions], [konstanth_news], [konstanth_donations] and [konstanth_newsletter], plus German aliases for events, jobs, institutions and donations.
+* Shortcodes keep working: [konstanth_events], [konstanth_aktuelle_veranstaltungen], [konstanth_jobs], [konstanth_institutions], [konstanth_news], [konstanth_donations] and [konstanth_newsletter], plus German aliases for events, jobs, institutions and donations. The earlier name [konstanth_termine] still works.
 
 **Design**
 
-* The pastel design "Farbstimmungen" uses one colour per category, inherits the font of your theme and adapts to the width of its column (on narrow columns the calendar becomes a list of days with events).
+* The design "Farbstimmungen" in the "Goldlicht" colours (gold, cream and dark brown for light beige pages) uses one pastel colour per category, inherits the font of your theme and adapts to the width of its column (on narrow columns the calendar becomes a list of days with events).
+* Event pages show a wide banner with a card for date and title, picture and flyer on the left, the description on the right, an "In den Kalender" button (ICS file) and a link back to all events. Buttons and backgrounds use the "Goldlicht" colours.
 * Colour contrast follows WCAG 2.2 AA. The animation of the selection chips is switched off when the system setting "reduce motion" is active.
 
 **Institution-scoped accounts**
@@ -108,6 +109,23 @@ No. After activation the plugin is in test mode and sends no emails. Live sendin
 Not in this version. Use "Duplicate event" to copy an event as a draft and adjust the date.
 
 == Changelog ==
+
+= 1.3.0 =
+* New: "Aktuelle Veranstaltungen" block and shortcode [konstanth_aktuelle_veranstaltungen] for the home page: the next events side by side, with a theme-styled button to all events. Past and cancelled events are left out.
+* New: event pages with a wide banner, a card for date and title, picture and flyer on the left, the description on the right, "In den Kalender" and "Alle Veranstaltungen". Administrators set a default banner under konstanth → Darstellung; each event can have its own.
+* New: a flyer for every event (PDF or image), offered as "Flyer herunterladen".
+* New: all editors (events, jobs, news, institutions) open in a focus view with a toolbar, a live preview and picture format hints. The classic WordPress view stays one click away.
+* New: konstanth → Anleitung, a step-by-step guide for institution accounts; administrators also see the platform chapters.
+* Changed: the overview shows shortcodes only to administrators; institution accounts get quick actions instead.
+* Changed: "Veranstaltung" instead of "Termin" throughout the backend, the website, the blocks and the newsletters. [konstanth_veranstaltungen] and [konstanth_aktuelle_veranstaltungen] join the existing shortcode names, which keep working. Addresses of event pages stay /termin/….
+* Changed: the newsletter choice is a three-way switch: Keine, Sofort, Nach 24 h.
+* New: addresses of events and institutions in separate fields: street and number, postcode, town, country (Germany, Switzerland, Austria) and the matching state or canton. Events keep an optional name of the place. Institution entries of the form "CH-8280 Kreuzlingen" are split into postcode, town and country once during the update.
+* New: admission for events: no information, free, or a price as text (for example "15 €, ermäßigt 10 €"), shown on the event page, in the calendar file and in newsletters.
+* New: "Brevo & Versand" (formerly "Versand-Einstellungen") explains the Brevo setup step by step, lists what is still missing and offers "Verbindung prüfen", which only reads account, sender and folder at Brevo and sends nothing.
+* Changed: the website components and the newsletter use the fixed "Goldlicht" colours (gold, cream, dark brown) instead of violet; category colours stay. Own colours can still be set with the CSS variables on .kn-portal.
+* Changed: duplicating an event also copies address, admission, flyer and banner.
+* Changed: the focus view of the editors also works on phones; the toolbar grows with its buttons instead of covering the form.
+* Fixed: institution accounts could not open "Neu hinzufügen" for events, jobs and news, because WordPress checked the page against "Posts → Add New".
 
 = 1.2.1 =
 * Fixed: deleting an event, job, news item, institution or account now removes all of its data, also when WP-Cron empties the trash, when WP-CLI deletes it or when an institution account deletes its own entry. Before, some internal fields could remain in the database. Data of other entries stays protected as before.

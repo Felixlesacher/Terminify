@@ -1,2 +1,159 @@
 .kn-admin{max-width:1250px}.kn-admin-intro{font-size:15px;color:#53625b}.kn-admin-panels{display:grid;grid-template-columns:1.15fr 1fr;gap:24px;margin-top:26px}.kn-admin-panel{background:white;border:1px solid #dcdcde;border-radius:6px;padding:27px;margin-bottom:22px}.kn-admin-panel h2{font:26px Georgia,serif;font-weight:400;color:#294c3f;margin-top:0}.kn-admin-panel li{margin:10px 0;line-height:1.7}.kn-shortcode{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:15px 0;border-top:1px solid #e4e8df}.kn-shortcode strong{display:block;font-size:12px;margin-bottom:7px}.kn-shortcode code{font-size:12px}.kn-field{margin:15px 0}.kn-field>label{font-weight:600;display:block;margin-bottom:7px}.kn-field>input,.kn-field>textarea,.kn-field>select{width:100%;max-width:100%}.kn-field>input{padding:6px 9px}.kn-field>textarea{padding:10px;line-height:1.7}.kn-field .description{display:block;margin-top:6px;font-size:12px}.kn-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 25px}.kn-topic-choices{padding:17px;background:#f1f5ed;border-radius:4px;margin:18px 0}.kn-topic-choices legend{font-weight:600;padding:0 8px}.kn-topic-choices>label{display:inline-flex;align-items:center;gap:6px;margin:7px 18px 7px 0;line-height:1.5}.kn-admin-note{padding:15px 17px;background:#edf4e7;border-left:3px solid #4b755c;margin:9px 0 20px}.kn-admin-note strong{font-weight:600}#kn-mail-mode{max-width:100%;font-size:12px}#kn-internal{border-left:3px solid #b6a77f}#kn-internal .inside{background:#faf8ef}.kn-admin .button-primary{background:#335e4a;border-color:#335e4a}.kn-admin .description{line-height:1.8}@media(max-width:800px){.kn-admin-panels,.kn-field-grid{grid-template-columns:1fr}.kn-admin-panel{padding:20px}.kn-shortcode code{font-size:10px}}
-.kn-swatch{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:600;line-height:1.6}.kn-topic-choices>label{gap:8px}.kn-category-table td{vertical-align:middle}.kn-category-preview{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:600;background:#eeeafa;color:#26233a}.kn-contrast{display:block;margin-top:4px;font-size:12px}.kn-new-category td{background:#f8f6fd}.kn-categories h2{margin-top:28px}
+.kn-swatch{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:600;line-height:1.6}.kn-topic-choices>label{gap:8px}.kn-category-table td{vertical-align:middle}.kn-category-preview{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:600;background:#ede6d9;color:#1f1b16}.kn-contrast{display:block;margin-top:4px;font-size:12px}.kn-new-category td{background:#f7f4ee}.kn-categories h2{margin-top:28px}
+.kn-field>.kn-field-title{font-weight:600;display:block;margin-bottom:7px}.kn-flyer-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0}.kn-flyer-name{font-weight:600;overflow-wrap:anywhere}.kn-flyer-remove{color:#b32d2e}
+.kn-media-preview{display:block;max-width:320px;width:100%;height:auto;border-radius:6px;margin:0 0 8px}.kn-media-preview[hidden]{display:none}
+
+/* Rundmail-Auswahl als Segmentschalter (alle Inhaltstypen) */
+.kn-segment{border:0;margin:10px 0 6px;padding:0}.kn-segment legend{font-weight:600;margin-bottom:8px;padding:0}
+.kn-segment{display:flex;flex-wrap:wrap;gap:0}.kn-segment legend{width:100%}
+.kn-segment label{flex:1 1 0;min-width:70px;position:relative;margin:0}
+.kn-segment input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.kn-segment span{display:block;text-align:center;padding:7px 6px;background:#ececf0;font-weight:600;font-size:13px;color:#3a3a3c;border:2px solid #ececf0}
+.kn-segment label:first-of-type span{border-radius:10px 0 0 10px}.kn-segment label:last-of-type span{border-radius:0 10px 10px 0}
+.kn-segment input:checked+span{background:#fff;color:#1c1c1e;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.kn-segment input:focus-visible+span{outline:2px solid #0a66d8;outline-offset:1px}
+
+/* Fokus-Ansicht der Editoren (body.kn-focus): ohne WordPress-Leisten, Werkzeugleiste oben, Formular links, Vorschau rechts */
+.kn-focus-bar,.kn-focus-preview{display:none}
+html.wp-toolbar:has(body.kn-focus){padding-top:0}
+body.kn-focus{background:#ececf1}
+body.kn-focus #wpadminbar,body.kn-focus #adminmenumain,body.kn-focus #wpfooter,body.kn-focus #screen-meta-links,body.kn-focus .wrap>h1.wp-heading-inline,body.kn-focus .wrap>.page-title-action,body.kn-focus .wrap>hr.wp-header-end{display:none}
+body.kn-focus #wpcontent,body.kn-focus #wpfooter{margin-left:0;padding-left:0}
+body.kn-focus #wpbody-content{padding-top:70px;padding-bottom:60px}
+body.kn-focus .wrap{margin:0 28px}
+body.kn-focus .kn-focus-bar,body.kn-focus-off .kn-focus-bar{display:flex;align-items:center;gap:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body.kn-focus .kn-focus-bar{position:fixed;top:0;left:0;right:0;z-index:9990;height:58px;padding:0 22px;background:rgba(255,255,255,.88);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid #e5e5ea}
+body.kn-focus-off .kn-focus-bar{margin:6px 0 14px}
+body.kn-focus-off .kn-focus-bar .kn-focus-heading,body.kn-focus-off .kn-focus-bar [data-kn-click],body.kn-focus-off .kn-focus-cancel{display:none}
+.kn-focus-back{color:#0a66d8;font-weight:600;font-size:15px;text-decoration:none;flex:1}
+.kn-focus-heading{text-align:center;line-height:1.25}.kn-focus-heading strong{display:block;font-size:15px;color:#1c1c1e}.kn-focus-heading span{font-size:12px;color:#6e6e73}
+.kn-focus-actions{flex:1;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.kn-focus-btn{border:0;border-radius:999px;padding:8px 16px;font:600 13px/1.2 inherit;background:#e5e5ea;color:#1c1c1e;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.kn-focus-btn:hover{background:#d8d8de;color:#1c1c1e}.kn-focus-btn:focus-visible{outline:2px solid #0a66d8;outline-offset:2px}
+.kn-focus-primary{background:#0a66d8;color:#fff}.kn-focus-primary:hover{background:#0854b3;color:#fff}
+.kn-focus-btn[hidden]{display:none}
+body.kn-focus #poststuff{max-width:640px;margin:8px auto 0;padding-top:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body.kn-focus #post-body.columns-2{margin-right:0;display:flex;flex-direction:column}
+body.kn-focus #post-body.columns-2 #post-body-content{order:1;float:none;width:auto;margin-bottom:0}
+body.kn-focus #post-body.columns-2 #postbox-container-2{order:2;float:none;width:auto}
+body.kn-focus #post-body.columns-2 #postbox-container-1{order:3;float:none;width:auto;margin-right:0}
+body.kn-focus #poststuff #post-body.columns-2 #side-sortables{width:auto;min-height:0}
+body.kn-focus #titlediv,body.kn-focus .kn-focus-section,body.kn-focus .postbox,body.kn-focus #postdivrich{background:#fff;border:0;border-radius:18px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 6px 24px rgba(0,0,0,.05);margin:0 0 16px}
+body.kn-focus #titlediv{padding:18px 22px 10px}
+body.kn-focus #titlediv #title{font-size:28px;font-weight:700;letter-spacing:-.02em;border:0;box-shadow:none;background:transparent;padding:0;height:auto;line-height:1.2}
+body.kn-focus #titlediv #title-prompt-text{padding:18px 22px;font-size:28px;font-weight:700;color:#6e6e73}
+body.kn-focus #titlediv .inside{margin:8px 0 0;font-size:12px}
+body.kn-focus .kn-focus-section{padding:16px 22px 10px}
+body.kn-focus .kn-focus-section-title,body.kn-focus .postbox-header h2{font-size:12px;font-weight:600;color:#6e6e73;text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px;padding:0}
+body.kn-focus .postbox-header{border-bottom:0;padding:14px 22px 0}
+body.kn-focus .postbox .inside{padding:4px 22px 14px;margin:0}
+body.kn-focus .postbox .handle-order-higher,body.kn-focus .postbox .handle-order-lower{display:none}
+body.kn-focus .kn-field input:not([type=checkbox]):not([type=radio]),body.kn-focus .kn-field textarea,body.kn-focus .kn-field select{background:#f5f5f7;border:1px solid #e5e5ea;border-radius:10px;padding:10px 12px;box-shadow:none;font-size:15px}
+body.kn-focus .kn-field input:focus,body.kn-focus .kn-field textarea:focus{border-color:#0a66d8;box-shadow:0 0 0 1px #0a66d8;background:#fff}
+body.kn-focus .kn-field>label,body.kn-focus .kn-field>.kn-field-title{font-size:13px}
+body.kn-focus #postdivrich{padding:14px 18px 6px}
+body.kn-focus #postdivrich::before{content:"Beschreibung";display:block;font-size:12px;font-weight:600;color:#6e6e73;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px}
+body.kn-focus #postimagediv .inside img{border-radius:12px}
+/* Themen als Schalter: die Checkbox bleibt bedienbar, das Etikett trägt die Farbe der Kategorie */
+body.kn-focus .kn-topic-choices{border:0;padding:0;margin:6px 0 4px;display:flex;flex-wrap:wrap;gap:8px}
+body.kn-focus .kn-topic-choices legend{font-size:13px;font-weight:600;margin-bottom:8px}
+body.kn-focus .kn-topic-choices label{position:relative;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 13px;background:#f2f2f7;font-weight:600;margin:0;cursor:pointer}
+body.kn-focus .kn-topic-choices label input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+body.kn-focus .kn-topic-choices label:has(input:checked){background:#e7f0fd;box-shadow:inset 0 0 0 2px #0a66d8}
+body.kn-focus .kn-topic-choices label:has(input:checked)::before{content:"✓";color:#0a66d8;font-weight:700}
+body.kn-focus .kn-topic-choices label:has(input:disabled){opacity:.45;cursor:not-allowed}
+body.kn-focus .kn-topic-choices label:has(input:focus-visible){outline:2px solid #0a66d8;outline-offset:2px}
+body.kn-focus .kn-topic-choices .description{flex-basis:100%}
+/* Vorschau rechts, nur auf breiten Bildschirmen */
+@media (min-width:1200px){
+body.kn-focus #poststuff{margin-left:28px;margin-right:auto}
+body.kn-focus .kn-focus-preview:not([hidden]){display:block;position:fixed;top:82px;right:28px;left:calc(28px + 640px + 28px + 28px);max-width:820px;margin-left:auto;bottom:20px;overflow:auto}
+}
+.kn-focus-preview-label{font:600 12px/1 -apple-system,sans-serif;color:#636366;text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px}
+.kn-pv{background:#f7f4ee;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.05),0 14px 40px rgba(0,0,0,.10);font-family:-apple-system,"Helvetica Neue",sans-serif;color:#1f1b16}
+.kn-pv-dots{height:28px;background:#f5f5f7;border-bottom:1px solid #e5e5ea;display:flex;align-items:center;gap:6px;padding:0 12px}.kn-pv-dots i{width:10px;height:10px;border-radius:50%;background:#d1d1d6}
+.kn-pv-banner{height:180px;background:#e8dfcf}.kn-pv-banner[hidden]{display:none}.kn-pv-banner img{display:block;width:100%;height:100%;object-fit:cover}
+.kn-pv-panel{background:#fff;margin:-46px 22px 0;position:relative;padding:14px 20px 16px}.kn-pv-banner[hidden]+.kn-pv-panel{margin-top:22px}
+.kn-pv-when{margin:0 0 6px;font-size:12.5px}.kn-pv-title{margin:0;font-size:22px;line-height:1.2;overflow-wrap:break-word}
+.kn-pv-body{display:grid;grid-template-columns:150px 1fr;gap:20px;padding:22px}
+.kn-pv-aside img{display:block;width:100%;height:auto}.kn-pv-aside img[hidden]{display:none}
+.kn-pv-flyer,.kn-pv-foot span{display:inline-block;background:#fff;color:#80621b;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:8px 12px}
+.kn-pv-flyer{display:block;margin-top:8px;text-align:center}.kn-pv-flyer[hidden]{display:none}
+.kn-pv-text p{margin:0 0 10px;font-size:13px;line-height:1.55}.kn-pv-place{color:#6b6155}
+.kn-pv-button{display:inline-block;border:1px solid #80621b;color:#80621b;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:7px 11px}
+.kn-pv-button[hidden]{display:none}
+.kn-pv-foot{display:flex;justify-content:flex-end;padding:0 22px 22px}
+/* Vorschau für Institution, Stelle und Nachricht: ein Block ohne Kopfbild */
+.kn-pv-plain{background:#fff}.kn-pv-plain .kn-pv-text{padding:20px 22px 24px}
+.kn-pv-org{display:flex;align-items:center;gap:16px;padding:22px 22px 0}.kn-pv-org .kn-pv-title{margin:0}
+.kn-pv-logo{flex:none;box-sizing:border-box;width:72px;height:72px;border-radius:50%;object-fit:contain;padding:6px;background:#fff;box-shadow:0 0 0 1px #e5e5ea}.kn-pv-logo[hidden]{display:none}
+.kn-pv-meta{margin:4px 0 0;font-size:12.5px;color:#6b6155}.kn-pv-plain .kn-pv-text .kn-pv-meta{margin:0 0 6px}.kn-pv-meta[hidden]{display:none}
+.kn-pv-wide{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#e8dfcf}.kn-pv-wide[hidden]{display:none}
+.kn-pv-plain .kn-pv-text .kn-pv-title{margin:0 0 12px;font-size:21px;line-height:1.25;font-weight:600}
+.kn-pv-facts{display:grid;gap:6px;margin:12px 0 14px;padding:12px 0 0;border-top:1px solid #ece6db;font-size:12.5px}
+.kn-pv-facts div{display:grid;grid-template-columns:110px 1fr;gap:10px}.kn-pv-facts div[hidden]{display:none}
+.kn-pv-facts dt{color:#6b6155}.kn-pv-facts dd{margin:0;overflow-wrap:anywhere;white-space:pre-line}
+.kn-pv-box{background:#f7f4ee;padding:14px 16px;margin-top:6px}.kn-pv-box[hidden]{display:none}.kn-pv-box strong{display:block;font-size:13px;margin-bottom:6px}.kn-pv-box p{margin:0;white-space:pre-line}
+/* Formathinweis unter jedem Bildfeld */
+.kn-image-hint{margin:8px 0 0;color:#646970;font-size:12.5px;line-height:1.45}
+body.kn-focus .kn-image-hint{color:#6e6e73}
+.kn-focus-preview-note{font-size:12px;color:#636366;margin:10px 2px 0}
+body.kn-focus .kn-field-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}body.kn-focus .kn-field-grid>*{min-width:0}body.kn-focus .kn-field input[type=datetime-local]{width:100%;min-width:0}
+/* Verwaltungsseiten (Übersicht, Anleitung, Darstellung, Import, Kategorien) im Stil der Fokus-Ansicht: weiße, runde Karten auf ruhigem Grund */
+.kn-admin{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1c1c1e}
+.kn-admin>h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px}
+.kn-admin .kn-admin-intro{color:#636366;font-size:15px;max-width:760px}
+.kn-admin .kn-admin-panel{border:0;border-radius:18px;padding:26px 28px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 30px rgba(0,0,0,.06)}
+.kn-admin .kn-admin-panel h2{font:700 20px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1c1c1e;letter-spacing:-.01em}
+.kn-admin .kn-admin-panel h3{font-size:14px;margin:22px 0 6px}
+.kn-admin .kn-shortcode{border-top-color:#e5e5ea}
+.kn-admin-panels-single{grid-template-columns:minmax(0,760px)}
+@media (max-width:960px){.kn-admin-panels{grid-template-columns:1fr}}
+.kn-overview-org{font-size:14px;margin:14px 0 0}
+.kn-overview-actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin:22px 0 4px}
+.kn-overview-action{display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:16px;padding:18px 18px 20px;text-decoration:none;color:#1c1c1e;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);transition:box-shadow .15s,transform .15s}
+.kn-overview-action strong{font-size:15px;color:#0a66d8}
+.kn-overview-action span{font-size:13px;color:#6e6e73;line-height:1.45}
+.kn-overview-action:hover,.kn-overview-action:focus-visible{color:#1c1c1e;box-shadow:0 0 0 2px #0a66d8,0 8px 24px rgba(0,0,0,.08)}
+.kn-overview-action:focus-visible{outline:0}
+@media (prefers-reduced-motion:no-preference){.kn-overview-action:hover{transform:translateY(-1px)}}
+/* Anleitung */
+.kn-guide{max-width:880px}
+.kn-guide-toc{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 26px}
+.kn-guide-toc a{background:#fff;border-radius:999px;padding:7px 14px;font-weight:600;font-size:13px;color:#0a66d8;text-decoration:none;box-shadow:0 0 0 1px #e5e5ea}
+.kn-guide-toc a:hover,.kn-guide-toc a:focus-visible{box-shadow:0 0 0 2px #0a66d8;outline:0}
+.kn-guide-section{background:#fff;border-radius:18px;padding:24px 28px 20px;margin:0 0 18px;box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 30px rgba(0,0,0,.06);scroll-margin-top:46px}
+.kn-guide-section h2{font-size:21px;font-weight:700;letter-spacing:-.01em;margin:0 0 12px}
+.kn-guide-section h3{font-size:15px;margin:20px 0 6px}
+.kn-guide-section p,.kn-guide-section li,.kn-guide-section dd{font-size:14px;line-height:1.6}
+.kn-guide-steps{margin:10px 0 14px 1.4em}.kn-guide-steps li{margin:0 0 8px;padding-left:4px}
+.kn-guide-list{list-style:disc;margin:10px 0 14px 1.4em}.kn-guide-list li{margin:0 0 8px}
+.kn-guide-tip{background:#eef4fe;border-radius:12px;padding:12px 16px;color:#1c3d6e}
+.kn-guide-table{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13.5px}
+.kn-guide-table th,.kn-guide-table td{text-align:left;vertical-align:top;padding:9px 12px 9px 0;border-top:1px solid #e5e5ea}
+.kn-guide-table thead th{border-top:0;color:#6e6e73;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.kn-guide-table tbody th{font-weight:600;width:30%}
+.kn-guide-scroll{overflow-x:auto}.kn-guide-formats{min-width:640px}.kn-guide-formats tbody th{width:auto;white-space:nowrap}
+.kn-guide-faq dt{font-weight:600;font-size:14px;margin:14px 0 4px}.kn-guide-faq dd{margin:0}
+.kn-guide-divider{margin:34px 0 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#636366}
+/* Adresse: Postleitzahl schmal neben dem Ort */
+.kn-field-grid.kn-field-grid-zip{grid-template-columns:minmax(0,9em) minmax(0,1fr)}
+body.kn-focus .kn-field-grid.kn-field-grid-zip{grid-template-columns:minmax(0,9em) minmax(0,1fr)}
+.kn-field>select{min-height:36px}
+/* WordPress gibt Auswahlfeldern eine große Zeilenhöhe; in der Fokus-Ansicht sind sie so hoch wie die Textfelder. */
+body.kn-focus .kn-field select{line-height:1.3;min-height:40px;height:40px}
+/* Brevo & Versand: Stand der Einrichtung */
+.kn-brevo-checks{list-style:none;margin:8px 0 14px;padding:0}.kn-brevo-checks li{display:flex;gap:8px;margin:0 0 6px;line-height:1.45}
+.kn-brevo-checks li>span[aria-hidden]{flex:none;width:1.3em;text-align:center;font-weight:700}
+.kn-brevo-checks .is-ok>span[aria-hidden]{color:#1e7b4a}.kn-brevo-checks .is-missing>span[aria-hidden]{color:#a2531a}
+.kn-brevo .form-table th{padding-left:0}
+/* Fokus-Leiste auf schmalen Bildschirmen: wächst mit, Überschrift oben, Knöpfe darunter; nichts überdeckt das Formular */
+@media (max-width:782px){
+body.kn-focus .kn-focus-bar{position:sticky;height:auto;flex-wrap:wrap;gap:8px 12px;padding:10px 14px}
+body.kn-focus #wpbody-content{padding-top:0}
+body.kn-focus .wrap{margin:0 10px}
+body.kn-focus .kn-focus-heading{order:-1;flex-basis:100%;text-align:left}
+body.kn-focus .kn-focus-actions{flex-basis:100%;justify-content:flex-start}
+body.kn-focus #wpbody{padding-top:0}
+body.kn-focus #titlediv #title,body.kn-focus #titlediv #title-prompt-text{font-size:22px}
+}

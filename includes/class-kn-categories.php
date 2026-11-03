@@ -3,7 +3,7 @@
 if (!defined('ABSPATH')) { exit; }
 
 final class KN_Categories {
-    const TAXONOMIES = array('kn_topic' => 'Themen (für Termine)', 'kn_institution_type' => 'Einrichtungsarten');
+    const TAXONOMIES = array('kn_topic' => 'Themen (für Veranstaltungen)', 'kn_institution_type' => 'Einrichtungsarten');
     // Design 2 "Farbstimmungen": the seven theme pastels first, further pastels for new categories.
     const PASTELS = array('#ffdfcb', '#cdf1e1', '#cbe5fb', '#fbd3e7', '#dfd6fa', '#fbf0b5', '#c4eeec', '#e4f2c7', '#f9d9c9', '#d6def8', '#f2d7ef', '#d3ecd6');
     const DEFAULTS = array('Vortrag' => '#ffdfcb', 'Gesundheit' => '#cdf1e1', 'Bildung' => '#cbe5fb', 'Kunst und Kultur' => '#fbd3e7', 'Anthroposophie' => '#dfd6fa', 'Religion' => '#fbf0b5', 'Esoterik und Spiritualität' => '#c4eeec', 'Schule' => '#cbe5fb');
@@ -45,7 +45,7 @@ final class KN_Categories {
 
     public static function term_colors($term_id) {
         foreach (array_keys(self::TAXONOMIES) as $taxonomy) { foreach (self::terms($taxonomy) as $term) { if ((int) $term->term_id === (int) $term_id) { return array($term->kn_bg, $term->kn_ink); } } }
-        return array('#eeeafa', '#26233a');
+        return array('#ede6d9', '#1f1b16');
     }
 
     /** CSS custom properties per category for badges, chips, cards and calendar entries. */
@@ -104,14 +104,14 @@ final class KN_Categories {
         $message = get_transient('kn_categories_notice_' . get_current_user_id());
         echo '<div class="wrap kn-admin kn-categories"><h1>Kategorien & Farben</h1>';
         if ($message) { echo '<div class="notice notice-info"><p>' . esc_html($message) . '</p></div>'; delete_transient('kn_categories_notice_' . get_current_user_id()); }
-        echo '<p class="kn-admin-intro">Themen ordnen Termine (höchstens drei pro Termin) und lassen sich als Rundmail abonnieren. Einrichtungsarten beschreiben die Einrichtungen. Die Farbe erscheint in Filtern, Karten, Kalender, Anmeldeformular und Rundmail. Die Schriftfarbe berechnet konstanth automatisch so, dass sie gut lesbar bleibt (mindestens 4,5:1).</p>';
+        echo '<p class="kn-admin-intro">Themen ordnen Veranstaltungen (höchstens drei pro Veranstaltung) und lassen sich als Rundmail abonnieren. Einrichtungsarten beschreiben die Einrichtungen. Die Farbe erscheint in Filtern, Karten, Kalender, Anmeldeformular und Rundmail. Die Schriftfarbe berechnet konstanth automatisch so, dass sie gut lesbar bleibt (mindestens 4,5:1).</p>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="kn-categories-form"><input type="hidden" name="action" value="kn_categories">';
         wp_nonce_field('kn_categories');
         foreach (self::TAXONOMIES as $taxonomy => $label) {
             echo '<h2>' . esc_html($label) . '</h2><table class="widefat striped kn-category-table"><thead><tr><th scope="col">Reihenfolge</th><th scope="col">Name</th><th scope="col">Farbe</th><th scope="col">Vorschau</th><th scope="col">Verwendung</th><th scope="col">Löschen</th></tr></thead><tbody>';
             foreach (self::terms($taxonomy) as $position => $term) {
                 $id = (int) $term->term_id; $subs = $taxonomy === 'kn_topic' ? self::subscriptions($id) : 0;
-                $usage = sprintf('%d %s', (int) $term->count, $taxonomy === 'kn_topic' ? ((int) $term->count === 1 ? 'Termin' : 'Termine') : ((int) $term->count === 1 ? 'Einrichtung' : 'Einrichtungen')) . ($taxonomy === 'kn_topic' ? ' · ' . $subs . ' ' . ($subs === 1 ? 'Abo' : 'Abos') : '');
+                $usage = sprintf('%d %s', (int) $term->count, $taxonomy === 'kn_topic' ? ((int) $term->count === 1 ? 'Veranstaltung' : 'Veranstaltungen') : ((int) $term->count === 1 ? 'Einrichtung' : 'Einrichtungen')) . ($taxonomy === 'kn_topic' ? ' · ' . $subs . ' ' . ($subs === 1 ? 'Abo' : 'Abos') : '');
                 $name = 'terms[' . $id . ']';
                 echo '<tr><td><input type="number" min="1" class="small-text" name="' . esc_attr($name . '[order]') . '" value="' . (int) ($position + 1) . '" aria-label="' . esc_attr('Reihenfolge von ' . $term->name) . '"></td>';
                 echo '<td><input type="text" class="regular-text" required maxlength="60" name="' . esc_attr($name . '[name]') . '" value="' . esc_attr($term->name) . '" aria-label="Name"></td>';
@@ -123,7 +123,7 @@ final class KN_Categories {
             echo '</tbody></table>';
         }
         submit_button('Änderungen speichern');
-        echo '</form><p class="description">Wird eine Kategorie gelöscht, verschwindet sie aus allen Terminen bzw. Einrichtungen. Themen-Abos dieser Kategorie werden beendet; die Abonnenten erhalten dazu keine Rundmails mehr. Ein Termin braucht weiterhin mindestens ein Thema, bevor er veröffentlicht werden kann.</p></div>';
+        echo '</form><p class="description">Wird eine Kategorie gelöscht, verschwindet sie aus allen Veranstaltungen bzw. Einrichtungen. Themen-Abos dieser Kategorie werden beendet; die Abonnenten erhalten dazu keine Rundmails mehr. Eine Veranstaltung braucht weiterhin mindestens ein Thema, bevor sie veröffentlicht werden kann.</p></div>';
     }
 
     public static function save() {

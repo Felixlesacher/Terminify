@@ -1,21 +1,23 @@
 /*
- * konstanth – Design „Farbstimmungen“.
+ * konstanth – Design „Farbstimmungen“ in den Farben „Goldlicht“: warmes Gold, Creme und dunkles Braun passend zu hellbeigen Seiten.
+ * Die Farben sind fest „Goldlicht“, unabhängig von der Palette des Themes; eigene Farben über die Variablen unten.
  * Alle Regeln gelten nur innerhalb der Plugin-Bausteine (.kn-portal); das Theme gestaltet die Seite.
  * Schrift und Grundgröße kommen vom Theme. Das Layout richtet sich nach der Breite des Bausteins (Container Queries).
  * Kategorie-Farben setzt konstanth unter „Kategorien & Farben“ als --kn-badge-bg / --kn-badge-ink (.kn-term-ID, [data-term]).
  * Eigene Anpassungen: Variablen auf .kn-portal überschreiben, z. B. .kn-portal { --kn-accent: #385c48; }
  */
 .kn-portal {
-  --kn-ink: #26233a;
-  --kn-muted: #585470;
-  --kn-accent: #5442a8;
+  /* Kontraste: Text und Links mindestens 4,5:1 auf Weiß, Papier und Creme; Feldränder mindestens 3:1. */
+  --kn-ink: #1f1b16;
+  --kn-muted: #6b6155;
+  --kn-accent: #80621b;
   --kn-accent-contrast: #ffffff;
   --kn-surface: #ffffff;
-  --kn-paper: #f8f6fd;
-  --kn-line: #dad5ec;
-  --kn-field-border: #767099;
-  --kn-soft: #eeeafa;
-  --kn-focus: #0b5cd5;
+  --kn-paper: #fbf9f4;
+  --kn-line: #e4dccd;
+  --kn-field-border: #8c7f6e;
+  --kn-soft: #ede6d9;
+  --kn-focus: #5f4813;
   --kn-success-bg: #cdf1e1;
   --kn-success-ink: #0b5a3e;
   --kn-radius: 14px;
@@ -147,7 +149,7 @@
 .kn-portal .kn-status-cancelled { background: var(--kn-ink); color: var(--kn-surface); }
 .kn-portal .kn-is-cancelled :is(h3, h4) a { text-decoration: line-through; text-decoration-thickness: 1.5px; }
 
-/* Termin-Karte: Farbband und Datumskachel in der Farbe des ersten Themas */
+/* Veranstaltungskarte: Farbband und Datumskachel in der Farbe des ersten Themas */
 .kn-portal .kn-event-card { box-shadow: inset 0 8px 0 var(--kn-badge-bg, var(--kn-soft)); display: grid; grid-template-columns: auto minmax(0, 1fr); padding-top: 8px; }
 .kn-portal .kn-is-cancelled.kn-event-card { box-shadow: inset 0 8px 0 var(--kn-line); }
 .kn-portal .kn-date-stamp { align-self: start; background: var(--kn-badge-bg, var(--kn-soft)); border-radius: 12px; color: var(--kn-badge-ink, var(--kn-ink)); display: grid; font-variant-numeric: tabular-nums; gap: .15rem; justify-items: center; margin: 1.25rem 0 1.25rem 1.25rem; padding: .6rem .25rem .7rem; text-align: center; width: 4.5rem; }
@@ -252,3 +254,62 @@
   .kn-portal *, .kn-portal *::before, .kn-portal *::after { animation: none !important; transition: none !important; }
   .kn-portal .kn-card:hover { transform: none; }
 }
+
+/* Aktuelle Veranstaltungen (z. B. Startseite): Überschrift und Knopf kommen im Stil des Themes, darunter die nächsten Veranstaltungen nebeneinander */
+.kn-upcoming { margin-block: 0 2rem; }
+.kn-upcoming-head { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; justify-content: space-between; margin-bottom: 1.25rem; }
+.kn-upcoming-head .kn-upcoming-title, .kn-upcoming-head .kn-upcoming-more { margin: 0; }
+.kn-portal.kn-upcoming-cards { background: transparent; border-radius: 0; margin: 0; padding: 0; }
+.kn-portal .kn-upcoming-grid { display: grid; gap: var(--kn-gap); grid-template-columns: minmax(0, 1fr); }
+@container kn (min-width: 42rem) { .kn-portal .kn-upcoming-grid { grid-template-columns: repeat(var(--kn-upcoming-cols, 3), minmax(0, 1fr)); } }
+.kn-portal .kn-upcoming-card { display: flex; flex-direction: column; }
+.kn-portal .kn-upcoming-media { aspect-ratio: 16 / 10; background: var(--kn-badge-bg, var(--kn-soft)); display: block; overflow: hidden; }
+.kn-portal .kn-upcoming-media img { display: block; height: 100%; object-fit: cover; width: 100%; }
+.kn-portal .kn-upcoming-placeholder { align-items: center; color: var(--kn-badge-ink, var(--kn-ink)); display: flex; justify-content: center; text-decoration: none; }
+.kn-portal .kn-upcoming-stamp { display: grid; gap: .35rem; justify-items: center; line-height: 1; }
+.kn-portal .kn-upcoming-stamp .kn-date-day { font-size: 3rem; }
+.kn-portal .kn-upcoming-card .kn-card-body { display: flex; flex: 1; flex-direction: column; gap: .45rem; }
+.kn-portal .kn-upcoming-card .kn-text-link { margin-top: auto; padding-top: .35rem; }
+.kn-portal .kn-upcoming-date { color: var(--kn-muted); font-size: .9375rem; font-variant-numeric: tabular-nums; }
+.kn-portal .kn-upcoming-date strong { color: var(--kn-ink); }
+.kn-portal .kn-upcoming-empty { color: var(--kn-muted); }
+
+/* Veranstaltungsseite: Kopfbild mit Karte für Datum und Titel, darunter Bild und Flyer links, Text rechts.
+   Farben fest „Goldlicht“ (Gold, dunkles Braun, Creme), unabhängig von der Palette des Themes. */
+.kn-portal.kn-event-page {
+  --kn-event-accent: #80621b;
+  --kn-event-ink: #1f1b16;
+  --kn-event-cream: #f7f4ee;
+  --kn-accent: var(--kn-event-accent);
+  --kn-accent-contrast: #fff;
+  background: var(--kn-event-cream);
+  border-radius: 0;
+  padding: 0;
+}
+.kn-portal.kn-event-page > .kn-notice { margin: 0 0 1rem; }
+/* Height follows the column width (about 3:1) without widening the box on narrow screens. */
+.kn-portal .kn-event-banner { background: var(--kn-event-cream); height: clamp(11rem, 33.3cqi, 34rem); overflow: hidden; width: 100%; }
+.kn-portal .kn-event-banner img { display: block; height: 100%; object-fit: cover; width: 100%; }
+.kn-portal .kn-event-panel { background: #fff; margin: 0 clamp(.75rem, 4%, 3rem); padding: clamp(1rem, 4cqi, 1.75rem) clamp(1rem, 4.5cqi, 2.75rem); position: relative; }
+.kn-portal .kn-has-banner .kn-event-panel { margin-top: clamp(-6rem, -9cqi, -2rem); }
+.kn-portal.kn-portal .kn-event-when { font-size: 1rem; margin: 0 0 .6rem; }
+.kn-portal.kn-portal .kn-event-title { color: var(--kn-event-ink); font-size: clamp(1.55rem, 1.1rem + 2.4cqi, 2.5rem); font-weight: 400; hyphens: auto; letter-spacing: -.005em; line-height: 1.2; margin: 0 0 .85rem; overflow-wrap: break-word; text-transform: none; }
+.kn-portal .kn-event-panel .kn-badges { margin-top: .1rem; }
+.kn-portal .kn-event-body { display: grid; gap: 1.75rem 3.25rem; padding: clamp(1.5rem, 5cqi, 3.25rem) clamp(.75rem, 4%, 3rem) 1rem; }
+@container kn (min-width: 46rem) {
+  .kn-portal .kn-event-body { grid-template-columns: minmax(0, 18.5rem) minmax(0, 1fr); }
+  .kn-portal .kn-event-single { grid-template-columns: minmax(0, 48rem); }
+}
+.kn-portal .kn-event-image { margin: 0; }
+.kn-portal .kn-event-image img { display: block; height: auto; width: 100%; }
+.kn-portal .kn-event-flyer, .kn-portal .kn-event-all { background: #fff; color: var(--kn-event-accent); display: inline-block; font-size: .8125rem; font-weight: 700; letter-spacing: .09em; padding: .85rem 1.4rem; text-decoration: none; text-transform: uppercase; }
+.kn-portal .kn-event-flyer { display: block; margin-top: .9rem; text-align: center; }
+.kn-portal .kn-event-flyer .kn-flyer-meta { font-weight: 600; letter-spacing: .02em; text-transform: none; }
+.kn-portal :is(.kn-event-flyer, .kn-event-all):hover { text-decoration: underline; text-underline-offset: .25em; }
+.kn-portal .kn-event-main { display: grid; gap: 1.25rem; align-content: start; }
+.kn-portal .kn-event-main .kn-facts { border-top: 1px solid rgba(0, 0, 0, .1); padding-top: 1.25rem; }
+.kn-portal.kn-event-page .kn-button { border-radius: 0; font-size: .8125rem; letter-spacing: .07em; text-transform: uppercase; }
+.kn-portal .kn-event-footer { display: flex; justify-content: flex-end; padding: 1.5rem clamp(.75rem, 4%, 3rem) 2.5rem; }
+
+/* Klassische Themes (z. B. Kadence) zeigen den Titel über dem Inhalt; auf der Veranstaltungsseite trägt ihn die Karte. */
+body.kn-event-page-active :is(.entry-hero[class*="kn_event-hero"], .entry-header.kn_event-title, .kn_event .entry-header > .entry-title) { display: none; }

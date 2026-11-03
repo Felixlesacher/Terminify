@@ -18,8 +18,8 @@
         });
         if (changed && feedback) {
           feedback.textContent = empty
-            ? 'Eine Auswahl ist leer. „Ergebnisse anzeigen“ zeigt dann keine Termine.'
-            : 'Auswahl geändert. Mit „Ergebnisse anzeigen“ auf alle Termine anwenden.';
+            ? 'Eine Auswahl ist leer. „Ergebnisse anzeigen“ zeigt dann keine Veranstaltungen.'
+            : 'Auswahl geändert. Mit „Ergebnisse anzeigen“ auf alle Veranstaltungen anwenden.';
         }
       };
       groups.forEach((group) => {
@@ -34,7 +34,7 @@
       });
       form.addEventListener('change', () => update(true));
       form.addEventListener('submit', () => {
-        if (feedback) feedback.textContent = 'Passende Termine werden geladen …';
+        if (feedback) feedback.textContent = 'Passende Veranstaltungen werden geladen …';
         form.setAttribute('aria-busy', 'true');
       });
       update(false);

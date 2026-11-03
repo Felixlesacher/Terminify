@@ -21,6 +21,7 @@ class KN_Mail {
             add_action('admin_post_nopriv_' . $action, [__CLASS__, $method]);
         }
         add_action('admin_post_kn_mail_settings', [__CLASS__, 'save_settings']);
+        add_action('admin_post_kn_brevo_check', [__CLASS__, 'check_connection']);
         add_action('admin_post_kn_mail_action', [__CLASS__, 'admin_action']);
         add_action('admin_post_kn_mail_preview', [__CLASS__, 'preview']);
         add_action('template_redirect', [__CLASS__, 'manage_landing']);
@@ -40,7 +41,7 @@ class KN_Mail {
         if (!current_user_can('manage_options')) { return; }
         $s = self::settings();
         if (!empty($s['enabled']) && empty($s['test_mode']) && !self::address_confirmed($s)) {
-            echo '<div class="notice notice-warning"><p><strong>konstanth:</strong> Der Rundmail-Versand ist angehalten, weil sich die Website-Adresse geändert hat (bestätigt: ' . esc_html($s['live_url'] ?: '–') . ', jetzt: ' . esc_html(home_url('/')) . '). Das schützt Test- und Kopierseiten vor echtem Versand. Ist dies die echte Website, speichern Sie die <a href="' . esc_url(admin_url('admin.php?page=kn-settings')) . '">Versand-Einstellungen</a> hier erneut.</p></div>';
+            echo '<div class="notice notice-warning"><p><strong>konstanth:</strong> Der Rundmail-Versand ist angehalten, weil sich die Website-Adresse geändert hat (bestätigt: ' . esc_html($s['live_url'] ?: '–') . ', jetzt: ' . esc_html(home_url('/')) . '). Das schützt Test- und Kopierseiten vor echtem Versand. Ist dies die echte Website, speichere die Einstellungen unter <a href="' . esc_url(admin_url('admin.php?page=kn-settings')) . '">Brevo &amp; Versand</a> hier erneut.</p></div>';
         }
         $recent = array_filter((array)get_option('kn_mail_errors', []), static function($e) { return (int)($e['time'] ?? 0) > time() - DAY_IN_SECONDS; });
         if ($recent) { echo '<div class="notice notice-error"><p><strong>konstanth:</strong> ' . count($recent) . ' Bestätigungs- oder Verwaltungsmail(s) konnten in den letzten 24 Stunden nicht versendet werden. Details unter <a href="' . esc_url(admin_url('admin.php?page=kn-mail')) . '">Rundmails</a>.</p></div>'; }
@@ -77,7 +78,7 @@ class KN_Mail {
     }
 
     public static function error_text($code) {
-        $texts = ['kn_brevo_401'=>'Brevo hat die Anfrage abgelehnt (HTTP 401): API-Schlüssel ungültig oder die IP-Adresse des Webservers ist in Brevo nicht freigegeben (Brevo → Sicherheit → Autorisierte IP-Adressen).', 'rate_limited'=>'Brevo meldet zu viele Anfragen. Der Auftrag wird automatisch später fortgesetzt.', 'time_budget'=>'Der Listenabgleich wird im nächsten Lauf fortgesetzt.', 'no_active_subscribers'=>'Keine bestätigten Abonnements für diesen Inhalt.', 'before_go_live'=>'Im Testbetrieb angelegt; beim Wechsel in den Livebetrieb nicht automatisch versendet.', 'kn_transport'=>'Antwort des Versanddienstes unklar.', 'worker_interrupted'=>'Verarbeitung unterbrochen; bitte in Brevo prüfen.', 'campaign_id_missing'=>'Brevo hat keine Kampagnen-ID geliefert; bitte in Brevo prüfen.', 'campaign_not_persisted'=>'Kampagnen-ID konnte nicht gespeichert werden; bitte in Brevo prüfen.', 'unpublished_before_dispatch'=>'Der Inhalt war vor dem Versand nicht mehr öffentlich.', 'daily_limit'=>'Diese Einrichtung hat heute schon eine Rundmail versendet; der Auftrag ist auf den nächsten Morgen verschoben.', 'admin_cancelled'=>'Von einem Administrator abgebrochen.', 'kn_list_provisioning'=>'Die Brevo-Liste wird gerade angelegt oder muss nach einer unklaren Antwort in Brevo geprüft und unter Versand-Einstellungen zugeordnet werden.', 'kn_list_unknown'=>'Brevo hat keine Listen-ID geliefert; bitte in Brevo prüfen.', 'kn_audience_limit'=>'Die Brevo-Liste ist für einen Lauf zu groß.', 'kn_topic'=>'Ungültige Abo-Zuordnung.', 'kn_mail_disabled'=>'Der Livebetrieb ist nicht freigegeben.'];
+        $texts = ['kn_brevo_401'=>'Brevo hat die Anfrage abgelehnt (HTTP 401): API-Schlüssel ungültig oder die IP-Adresse des Webservers ist in Brevo nicht freigegeben (Brevo → Sicherheit → Autorisierte IP-Adressen).', 'rate_limited'=>'Brevo meldet zu viele Anfragen. Der Auftrag wird automatisch später fortgesetzt.', 'time_budget'=>'Der Listenabgleich wird im nächsten Lauf fortgesetzt.', 'no_active_subscribers'=>'Keine bestätigten Abonnements für diesen Inhalt.', 'before_go_live'=>'Im Testbetrieb angelegt; beim Wechsel in den Livebetrieb nicht automatisch versendet.', 'kn_transport'=>'Antwort des Versanddienstes unklar.', 'worker_interrupted'=>'Verarbeitung unterbrochen; bitte in Brevo prüfen.', 'campaign_id_missing'=>'Brevo hat keine Kampagnen-ID geliefert; bitte in Brevo prüfen.', 'campaign_not_persisted'=>'Kampagnen-ID konnte nicht gespeichert werden; bitte in Brevo prüfen.', 'unpublished_before_dispatch'=>'Der Inhalt war vor dem Versand nicht mehr öffentlich.', 'daily_limit'=>'Diese Einrichtung hat heute schon eine Rundmail versendet; der Auftrag ist auf den nächsten Morgen verschoben.', 'admin_cancelled'=>'Von einem Administrator abgebrochen.', 'kn_list_provisioning'=>'Die Brevo-Liste wird gerade angelegt oder muss nach einer unklaren Antwort in Brevo geprüft und unter „Brevo & Versand“ zugeordnet werden.', 'kn_list_unknown'=>'Brevo hat keine Listen-ID geliefert; bitte in Brevo prüfen.', 'kn_audience_limit'=>'Die Brevo-Liste ist für einen Lauf zu groß.', 'kn_topic'=>'Ungültige Abo-Zuordnung.', 'kn_mail_disabled'=>'Der Livebetrieb ist nicht freigegeben.'];
         return $texts[$code] ?? $code;
     }
 
@@ -223,7 +224,7 @@ class KN_Mail {
     public static function topic_key($term_id) { return 't' . (int)$term_id; }
     public static function topic_term($topic) { return preg_match('/^t([1-9][0-9]*)$/D', (string)$topic, $m) ? (int)$m[1] : 0; }
     public static function topic_label($org, $topic) {
-        if ($term_id = self::topic_term($topic)) { $term = get_term($term_id); return 'Thema „' . ($term && !is_wp_error($term) ? $term->name : 'entfernt') . '“ – Termine aller Einrichtungen'; }
+        if ($term_id = self::topic_term($topic)) { $term = get_term($term_id); return 'Thema „' . ($term && !is_wp_error($term) ? $term->name : 'entfernt') . '“ – Veranstaltungen aller Einrichtungen'; }
         $institution = get_post((int)$org);
         return ($institution ? $institution->post_title : 'Einrichtung') . ' – ' . (self::topics()[$topic] ?? $topic);
     }
@@ -415,7 +416,7 @@ class KN_Mail {
     public static function email_html($id) {
         $p = get_post($id); if (!$p) { return ''; }
         $s = self::settings(); $org = get_post((int)get_post_meta($id, '_kn_org', true));
-        $font = 'font-family:Arial,Helvetica,sans-serif'; $ink = '#26233a'; $muted = '#585470'; $accent = '#5442a8';
+        $font = 'font-family:Arial,Helvetica,sans-serif'; $ink = '#1f1b16'; $muted = '#6b6155'; $accent = '#80621b';
         $image = self::mail_image_url($id);
         $public = get_post_meta($id, '_kn_public_info', true);
         $content = preg_replace('#<(script|style|iframe|form)\b[^>]*>.*?</\1>#is', '', $p->post_content);
@@ -423,8 +424,8 @@ class KN_Mail {
         // HTML email accepts only public content, never internal notes or editor scripts.
         $content = preg_replace('#<(script|style|iframe|form)\b[^>]*>.*?</\1>#is', '', $content);
         $terms = [];
-        if ($p->post_type === 'kn_event') { foreach (self::event_topics($id) as $term_id) { $term = get_term($term_id); if ($term && !is_wp_error($term)) { $terms[] = [$term->name, class_exists('KN_Categories') ? KN_Categories::term_colors($term_id) : ['#eeeafa', $ink]]; } } }
-        $band = $terms ? $terms[0][1][0] : '#eeeafa';
+        if ($p->post_type === 'kn_event') { foreach (self::event_topics($id) as $term_id) { $term = get_term($term_id); if ($term && !is_wp_error($term)) { $terms[] = [$term->name, class_exists('KN_Categories') ? KN_Categories::term_colors($term_id) : ['#ede6d9', $ink]]; } } }
+        $band = $terms ? $terms[0][1][0] : '#ede6d9';
         $details = ''; $preheader = '';
         if ($p->post_type === 'kn_event') {
             $start = (int)get_post_meta($id, '_kn_start', true); $end = (int)get_post_meta($id, '_kn_end', true);
@@ -437,19 +438,21 @@ class KN_Mail {
                 if ($value) { $details .= '<strong>' . esc_html($label) . ':</strong> ' . esc_html($value) . '<br>'; }
             }
         }
-        $location = get_post_meta($id, '_kn_location', true);
+        $location = $p->post_type === 'kn_event' ? KN_Core::place($id)['text'] : get_post_meta($id, '_kn_location', true);
         if ($location) { $details .= '<strong>Wo:</strong> ' . esc_html($location) . '<br>'; }
+        $price = $p->post_type === 'kn_event' ? KN_Core::price($id) : '';
+        if ($price !== '') { $details .= '<strong>Eintritt:</strong> ' . esc_html($price) . '<br>'; }
         $org_name = $org ? $org->post_title : 'konstanth';
         $intro = ['kn_event'=>' lädt ein', 'kn_job'=>' sucht', 'kn_news'=>' berichtet'][$p->post_type] ?? '';
-        $cta = ['kn_event'=>'Termin ansehen', 'kn_job'=>'Stelle ansehen', 'kn_news'=>'Weiterlesen'][$p->post_type] ?? 'Ansehen';
+        $cta = ['kn_event'=>'Veranstaltung ansehen', 'kn_job'=>'Stelle ansehen', 'kn_news'=>'Weiterlesen'][$p->post_type] ?? 'Ansehen';
         $registration = $p->post_type === 'kn_event' ? esc_url_raw((string)get_post_meta($id, '_kn_registration_url', true), ['http','https']) : '';
         $button = function ($url, $label, $filled) use ($font, $accent) { return '<td bgcolor="' . ($filled ? $accent : '#ffffff') . '" style="background:' . ($filled ? $accent : '#ffffff') . ';border:2px solid ' . $accent . ';border-radius:10px;padding:12px 22px"><a href="' . esc_url($url) . '" style="' . $font . ';font-size:16px;font-weight:bold;color:' . ($filled ? '#ffffff' : $accent) . ';text-decoration:none;display:inline-block">' . esc_html($label) . '</a></td>'; };
         $badges = '';
         foreach ($terms as $term) { $badges .= '<td bgcolor="' . esc_attr($term[1][0]) . '" style="background:' . esc_attr($term[1][0]) . ';color:' . esc_attr($term[1][1]) . ';' . $font . ';font-size:13px;font-weight:bold;padding:4px 10px;border-radius:999px">' . esc_html($term[0]) . '</td><td width="6" style="font-size:0;line-height:0">&nbsp;</td>'; }
         $row = function ($html, $style = 'padding:0 32px') { return '<tr><td style="' . $style . '">' . $html . '</td></tr>'; };
-        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . esc_html($p->post_title) . '</title></head><body style="margin:0;padding:0;background:#f8f6fd">';
+        $html = '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . esc_html($p->post_title) . '</title></head><body style="margin:0;padding:0;background:#f7f4ee">';
         $html .= '<div style="display:none;max-height:0;overflow:hidden;mso-hide:all">' . esc_html(trim($preheader . ' · ' . $org_name, ' ·')) . '</div>';
-        $html .= '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#f8f6fd" style="background:#f8f6fd"><tr><td align="center" style="padding:24px 12px"><!--[if mso]><table role="presentation" width="600" align="center" cellspacing="0" cellpadding="0"><tr><td><![endif]--><table role="presentation" width="600" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="width:100%;max-width:600px;background:#ffffff;border-radius:14px">';
+        $html .= '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#f7f4ee" style="background:#f7f4ee"><tr><td align="center" style="padding:24px 12px"><!--[if mso]><table role="presentation" width="600" align="center" cellspacing="0" cellpadding="0"><tr><td><![endif]--><table role="presentation" width="600" cellspacing="0" cellpadding="0" bgcolor="#ffffff" style="width:100%;max-width:600px;background:#ffffff;border-radius:14px">';
         $html .= '<tr><td bgcolor="' . $accent . '" style="background:' . $accent . ';padding:18px 32px;' . $font . ';font-size:20px;font-weight:bold;color:#ffffff;border-radius:14px 14px 0 0">konstanth</td></tr>';
         $html .= '<tr><td height="8" bgcolor="' . esc_attr($band) . '" style="font-size:0;line-height:0;mso-line-height-rule:exactly;background:' . esc_attr($band) . '">&nbsp;</td></tr>';
         $html .= $row('<p style="margin:0;' . $font . ';font-size:14px;color:' . $muted . '">' . esc_html($org_name . $intro) . '</p>', 'padding:24px 32px 0 32px');
@@ -460,7 +463,7 @@ class KN_Mail {
         $html .= $row('<div style="' . $font . ';font-size:16px;line-height:1.65;color:' . $ink . '">' . $content . ($public ? wp_kses_post(wpautop($public)) : '') . '</div>', 'padding:14px 32px 0 32px');
         $html .= $row('<table role="presentation" cellspacing="0" cellpadding="0"><tr>' . $button(get_permalink($id), $cta, true) . ($registration ? '<td width="10" style="font-size:0">&nbsp;</td>' . $button($registration, 'Zur Anmeldung', false) : '') . '</tr></table>', 'padding:22px 32px 8px 32px');
         if (is_email(get_post_meta((int)get_post_meta($id, '_kn_org', true), '_kn_email', true))) { $html .= $row('<p style="margin:0;' . $font . ';font-size:14px;color:' . $muted . '">Antworten auf diese E-Mail gehen direkt an ' . esc_html($org_name) . '.</p>', 'padding:14px 32px 0 32px'); }
-        $html .= '<tr><td style="padding:24px 0 0 0"></td></tr><tr><td bgcolor="#eeeafa" style="background:#eeeafa;padding:20px 32px;' . $font . ';font-size:13px;line-height:1.55;color:' . $muted . ';border-radius:0 0 14px 14px">Absender: ' . esc_html($org_name) . ' über konstanth<br>' . nl2br(esc_html($s['postal_address'])) . '<br>Sie erhalten diese E-Mail, weil Sie Neuigkeiten dieser Einrichtung oder dieses Themas abonniert und bestätigt haben.<br><a href="' . esc_url(self::link('manage')) . '" style="color:' . $ink . '">Abonnements verwalten</a> · <a href="{{ unsubscribe }}" style="color:' . $ink . '">Alle E-Mails abbestellen</a></td></tr>';
+        $html .= '<tr><td style="padding:24px 0 0 0"></td></tr><tr><td bgcolor="#ede6d9" style="background:#ede6d9;padding:20px 32px;' . $font . ';font-size:13px;line-height:1.55;color:' . $muted . ';border-radius:0 0 14px 14px">Absender: ' . esc_html($org_name) . ' über konstanth<br>' . nl2br(esc_html($s['postal_address'])) . '<br>Sie erhalten diese E-Mail, weil Sie Neuigkeiten dieser Einrichtung oder dieses Themas abonniert und bestätigt haben.<br><a href="' . esc_url(self::link('manage')) . '" style="color:' . $ink . '">Abonnements verwalten</a> · <a href="{{ unsubscribe }}" style="color:' . $ink . '">Alle E-Mails abbestellen</a></td></tr>';
         return $html . '</table><!--[if mso]></td></tr></table><![endif]--></td></tr></table></body></html>';
     }
 
@@ -533,7 +536,7 @@ class KN_Mail {
         $html .= '<div><h2 class="kn-section-title">Neuigkeiten per E-Mail</h2><p class="kn-form-note">Die Anmeldung wird erst aktiv, wenn Sie den Link in der Bestätigungsmail anklicken.</p></div>';
         $html .= '<div><label class="kn-field-label" for="' . esc_attr($email_id) . '">E-Mail-Adresse</label><input id="' . esc_attr($email_id) . '" class="kn-input" type="email" name="email" maxlength="190" autocomplete="email" required></div>';
         if ($themes) {
-            $html .= '<fieldset class="kn-filter-group" data-kn-filter-group="topics"><legend>Termine zu Themen – aus allen Einrichtungen</legend><div class="kn-check-list">';
+            $html .= '<fieldset class="kn-filter-group" data-kn-filter-group="topics"><legend>Veranstaltungen zu Themen – aus allen Einrichtungen</legend><div class="kn-check-list">';
             foreach ($themes as $term) { $html .= self::chip('topic_ids[]', (int)$term->term_id, $term->name, 'kn-term-' . (int)$term->term_id); }
             $html .= '</div></fieldset>';
         }
@@ -545,7 +548,7 @@ class KN_Mail {
         }
         if ($institutions) {
             $html .= '<fieldset class="kn-filter-group" data-kn-filter-group="types"><legend>' . ($org ? 'Was möchten Sie erhalten?' : 'Was möchten Sie von diesen Einrichtungen erhalten?') . '</legend><div class="kn-check-list">';
-            foreach (self::topics() as $topic=>$label) { $html .= self::chip('topics[]', $topic, ['kn_event'=>'Termine','kn_job'=>'Stellenangebote','kn_news'=>'Nachrichten'][$topic] ?? $label, '', $org && $topic === 'kn_event'); }
+            foreach (self::topics() as $topic=>$label) { $html .= self::chip('topics[]', $topic, ['kn_event'=>'Veranstaltungen','kn_job'=>'Stellenangebote','kn_news'=>'Nachrichten'][$topic] ?? $label, '', $org && $topic === 'kn_event'); }
             $html .= '</div></fieldset>';
         }
         $privacy = get_privacy_policy_url();
@@ -765,24 +768,81 @@ class KN_Mail {
 
     public static function render_settings() {
         if (!current_user_can('manage_options')) { wp_die('Keine Berechtigung.', '', ['response'=>403]); }
-        $s = self::settings();
-        echo '<div class="wrap"><h1>Rundmail-Einstellungen</h1><p>Nach der Installation bleibt der Versand aus. Im Testmodus werden weder Bestätigungs-E-Mails noch Kampagnen gesendet. Bereits im Test verarbeitete Aufträge werden beim Einschalten nicht automatisch verschickt.</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="kn_mail_settings">';
+        $s = self::settings(); $key = defined('KN_BREVO_API_KEY') ? (string) KN_BREVO_API_KEY : (string) $s['api_key'];
+        $state = self::is_live() ? 'Livebetrieb: Rundmails und Bestätigungsmails gehen über Brevo hinaus.' : (!empty($s['test_mode']) ? 'Testmodus: Es geht keine E-Mail hinaus.' : 'Versand aus: Es geht keine E-Mail hinaus.');
+        echo '<div class="wrap kn-admin kn-brevo"><h1>Brevo & Versand</h1><p class="kn-admin-intro">Rundmails und Bestätigungsmails verschickt konstanth über dein Brevo-Konto. Hier trägst du einmal die Zugangsdaten ein. Nach der Installation bleibt der Versand aus; im Testmodus gehen weder Bestätigungsmails noch Rundmails hinaus.</p>';
+        if (!empty($_GET['saved'])) { echo '<div class="notice notice-success is-dismissible"><p>Gespeichert.</p></div>'; }
+        echo '<div class="kn-admin-panels"><section class="kn-admin-panel"><h2>So verbindest du Brevo</h2><ol class="kn-guide-steps">';
+        echo '<li><strong>Konto:</strong> Bei brevo.com ein Konto anlegen, am besten nur für konstanth. Für den Anfang reicht der kostenlose Tarif; wie viele E-Mails pro Tag er erlaubt, steht bei Brevo im Tarif.</li>';
+        echo '<li><strong>Absender bestätigen:</strong> In Brevo unter „Absender, Domains & dedizierte IPs“ die Adresse hinzufügen, von der die Mails kommen (zum Beispiel rundmail@deine-domain.de), und über die Bestätigungsmail freischalten. Besser zusätzlich die Domain authentifizieren: Brevo zeigt dafür DNS-Einträge (DKIM, DMARC), die du bei deinem Hoster einträgst. → Feld „Verifizierte Absenderadresse“.</li>';
+        echo '<li><strong>API-Schlüssel:</strong> In Brevo über das Kontomenü oben rechts „SMTP & API“ öffnen, Reiter „API-Schlüssel“, einen neuen Schlüssel erzeugen und sofort kopieren (Brevo zeigt ihn nur einmal). → Feld „Brevo API-Schlüssel“.</li>';
+        echo '<li><strong>Ordner:</strong> In Brevo unter „Kontakte“ → „Listen“ einen Ordner anlegen, zum Beispiel „konstanth“. Seine Nummer kommt ins Feld „Brevo Ordner-ID“. Findest du die Nummer nicht, speichere erst die übrigen Angaben und klick „Verbindung prüfen“: Die Prüfung nennt alle Ordner deines Kontos mit Nummer.</li>';
+        echo '<li><strong>Absendername und Postanschrift</strong> eintragen und speichern. Die Postanschrift steht in jeder Rundmail.</li>';
+        echo '<li><strong>Verbindung prüfen</strong> (Kasten „Stand“). Meldet Brevo „HTTP 401“, ist der Schlüssel falsch oder bei Brevo die IP-Sperre aktiv: Dann unter „Sicherheit“ → „Autorisierte IP-Adressen“ die IP deines Servers freigeben.</li>';
+        echo '<li><strong>Live schalten:</strong> „Newsletter grundsätzlich aktivieren“ anhaken, „Testmodus“ abhaken und speichern. Danach dich selbst auf der Anmeldeseite eintragen und eine Rundmail testen.</li></ol>';
+        echo '<p class="description">Die Menünamen bei Brevo können sich ändern; im Zweifel in der Brevo-Hilfe nach dem Begriff suchen.</p>';
+        echo '<h3>Was du in Brevo nicht einrichten musst</h3><p>Keine Formulare, keine Listen und keine Kategorien. Die Anmeldung läuft über den Baustein „konstanth: Rundmail-Anmeldung“ auf deiner Website, mit Bestätigungsmail (Double-Opt-in). Leser wählen dort Themen und Einrichtungen. Die Themen pflegst du unter „Kategorien & Farben“; konstanth legt die passenden Listen im Ordner selbst an und hält sie aktuell.</p></section>';
+        $checks = ['API-Schlüssel gespeichert' => $key !== '', 'Absenderadresse eingetragen' => (bool) is_email($s['sender_email']), 'Absendername eingetragen' => trim((string) $s['sender_name']) !== '', 'Postanschrift eingetragen' => trim((string) $s['postal_address']) !== '', 'Ordner-ID eingetragen' => (int) $s['folder_id'] > 0, 'Seite mit dem Baustein „Rundmail-Anmeldung“ gefunden' => (bool) self::page_url()];
+        echo '<section class="kn-admin-panel"><h2>Stand</h2><p><strong>' . esc_html($state) . '</strong></p><ul class="kn-brevo-checks">';
+        foreach ($checks as $label => $ok) { echo '<li class="' . ($ok ? 'is-ok' : 'is-missing') . '"><span aria-hidden="true">' . ($ok ? '✓' : '–') . '</span> ' . esc_html($label) . '<span class="screen-reader-text">' . ($ok ? ': erledigt' : ': fehlt noch') . '</span></li>'; }
+        echo '</ul>';
+        $report = !empty($_GET['checked']) ? get_transient('kn_brevo_check_' . get_current_user_id()) : false;
+        if (is_array($report)) { echo '<h3>Ergebnis der Prüfung</h3><ul class="kn-brevo-checks">'; foreach ($report as $line) { echo '<li class="' . (!empty($line[0]) ? 'is-ok' : 'is-missing') . '"><span aria-hidden="true">' . (!empty($line[0]) ? '✓' : '!') . '</span> ' . esc_html((string) $line[1]) . '</li>'; } echo '</ul>'; }
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="kn_brevo_check">';
+        wp_nonce_field('kn_brevo_check');
+        echo '<p><button class="button" type="submit">Verbindung prüfen</button></p><p class="description">Fragt mit dem gespeicherten Schlüssel bei Brevo nach Konto, Absender und Ordner. Es wird nichts gesendet, auch nicht im Livebetrieb. Erst speichern, dann prüfen.</p></form></section></div>';
+        echo '<section class="kn-admin-panel"><h2>Zugangsdaten und Schalter</h2><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="kn_mail_settings">';
         wp_nonce_field('kn_mail_settings');
-        echo '<table class="form-table"><tr><th><label for="kn-api">Brevo API-Schlüssel</label></th><td><input id="kn-api" type="password" name="api_key" autocomplete="new-password" value="" class="regular-text"' . (defined('KN_BREVO_API_KEY') ? ' disabled' : '') . '><p class="description">' . (defined('KN_BREVO_API_KEY') ? 'Über KN_BREVO_API_KEY in der Serverkonfiguration gesetzt.' : ($s['api_key'] ? 'Schlüssel vorhanden. Leer lassen, um ihn beizubehalten.' : 'Noch kein Schlüssel gespeichert.')) . '</p></td></tr>';
-        foreach (['sender_email'=>'Verifizierte Absenderadresse','sender_name'=>'Absendername','folder_id'=>'Brevo Ordner-ID für neue Listen'] as $key=>$label) {
-            echo '<tr><th><label for="kn-' . esc_attr($key) . '">' . esc_html($label) . '</label></th><td><input class="regular-text" id="kn-' . esc_attr($key) . '" name="' . esc_attr($key) . '" type="' . ($key === 'folder_id' ? 'number" min="1' : ($key === 'sender_email' ? 'email' : 'text')) . '" value="' . esc_attr($s[$key]) . '"></td></tr>';
+        echo '<table class="form-table"><tr><th><label for="kn-api">Brevo API-Schlüssel</label></th><td><input id="kn-api" type="password" name="api_key" autocomplete="new-password" value="" class="regular-text"' . (defined('KN_BREVO_API_KEY') ? ' disabled' : '') . '><p class="description">' . (defined('KN_BREVO_API_KEY') ? 'Über KN_BREVO_API_KEY in der Serverkonfiguration gesetzt.' : ($s['api_key'] ? 'Schlüssel vorhanden. Leer lassen, um ihn beizubehalten.' : 'Noch kein Schlüssel gespeichert.')) . ' Sicherer als hier: in der wp-config.php der Website <code>define( \'KN_BREVO_API_KEY\', \'…\' );</code></p></td></tr>';
+        $hints = ['sender_email'=>'Die bei Brevo bestätigte Adresse, zum Beispiel rundmail@deine-domain.de.', 'sender_name'=>'Für Bestätigungsmails, zum Beispiel „konstanth“. Rundmails tragen automatisch „Name der Einrichtung über konstanth“.', 'folder_id'=>'Die Nummer des Ordners, den du in Brevo für konstanth angelegt hast. Darin legt konstanth die Listen an.'];
+        foreach (['sender_email'=>'Verifizierte Absenderadresse','sender_name'=>'Absendername','folder_id'=>'Brevo Ordner-ID'] as $field=>$label) {
+            echo '<tr><th><label for="kn-' . esc_attr($field) . '">' . esc_html($label) . '</label></th><td><input class="regular-text" id="kn-' . esc_attr($field) . '" name="' . esc_attr($field) . '" type="' . ($field === 'folder_id' ? 'number" min="1' : ($field === 'sender_email' ? 'email' : 'text')) . '" value="' . esc_attr($s[$field]) . '"><p class="description">' . esc_html($hints[$field]) . '</p></td></tr>';
         }
-        echo '<tr><th><label for="kn-address">Postanschrift für E-Mail-Fußzeilen</label></th><td><textarea id="kn-address" name="postal_address" rows="4" class="large-text">' . esc_textarea($s['postal_address']) . '</textarea></td></tr><tr><th>Freigabe</th><td><label><input type="checkbox" name="enabled" value="1" ' . checked(!empty($s['enabled']), true, false) . '> Newsletter grundsätzlich aktivieren</label><br><label><input type="checkbox" name="test_mode" value="1" ' . checked(!empty($s['test_mode']),true,false) . '> Testmodus: keine externen E-Mails oder API-Aufrufe</label></td></tr><tr><th>Rundmails von Einrichtungen</th><td><label><input type="checkbox" name="require_approval" value="1" ' . checked(!empty($s['require_approval']),true,false) . '> brauchen meine Freigabe, bevor sie versendet werden</label><p class="description">Unabhängig davon geht pro Einrichtung höchstens eine Rundmail pro Tag hinaus. Einzelne Einrichtungen sperren Sie im jeweiligen Institutionsprofil.</p></td></tr><tr><th>Beim Löschen des Plugins</th><td><label><input type="checkbox" name="delete_on_uninstall" value="1" ' . checked((bool)get_option('kn_delete_on_uninstall'), true, false) . '> alle konstanth-Daten entfernen</label><p class="description">Standardmäßig bleiben Inhalte, Kategorien und Abonnements erhalten, wenn das Plugin gelöscht wird. Mit diesem Häkchen werden beim Löschen (nicht beim Deaktivieren) alle Termine, Stellen, Nachrichten, Einrichtungen, Kategorien, Abonnements und Einstellungen endgültig entfernt. Bilder in der Mediathek, Benutzerkonten und Daten bei Brevo bleiben bestehen.</p></td></tr><tr><th>Seite für Anmeldung und Bestätigung</th><td>' . (self::page_url() ? '<a href="' . esc_url(self::page_url()) . '">' . esc_html(self::page_url()) . '</a><p class="description">Bestätigungs- und Verwaltungsschritte erscheinen auf dieser Seite in Ihrem Theme.</p>' : '<p class="description">Noch keine veröffentlichte Seite mit dem Baustein „Rundmail-Anmeldung“ gefunden. Bis dahin erscheinen Bestätigungen als schlichte WordPress-Seite.</p>') . '</td></tr></table>';
+        echo '<tr><th><label for="kn-address">Postanschrift für E-Mail-Fußzeilen</label></th><td><textarea id="kn-address" name="postal_address" rows="4" class="large-text">' . esc_textarea($s['postal_address']) . '</textarea><p class="description">Pflichtangabe in jeder Rundmail, meist die Anschrift aus dem Impressum.</p></td></tr><tr><th>Freigabe</th><td><label><input type="checkbox" name="enabled" value="1" ' . checked(!empty($s['enabled']), true, false) . '> Newsletter grundsätzlich aktivieren</label><br><label><input type="checkbox" name="test_mode" value="1" ' . checked(!empty($s['test_mode']),true,false) . '> Testmodus: keine E-Mails und keine automatischen Aufrufe bei Brevo</label></td></tr><tr><th>Rundmails von Einrichtungen</th><td><label><input type="checkbox" name="require_approval" value="1" ' . checked(!empty($s['require_approval']),true,false) . '> brauchen meine Freigabe, bevor sie versendet werden</label><p class="description">Unabhängig davon geht pro Einrichtung höchstens eine Rundmail pro Tag hinaus. Einzelne Einrichtungen sperrst du im jeweiligen Institutionsprofil.</p></td></tr><tr><th>Beim Löschen des Plugins</th><td><label><input type="checkbox" name="delete_on_uninstall" value="1" ' . checked((bool)get_option('kn_delete_on_uninstall'), true, false) . '> alle konstanth-Daten entfernen</label><p class="description">Standardmäßig bleiben Inhalte, Kategorien und Abonnements erhalten, wenn das Plugin gelöscht wird. Mit diesem Häkchen werden beim Löschen (nicht beim Deaktivieren) alle Veranstaltungen, Stellen, Nachrichten, Einrichtungen, Kategorien, Abonnements und Einstellungen endgültig entfernt. Bilder in der Mediathek, Benutzerkonten und Daten bei Brevo bleiben bestehen.</p></td></tr><tr><th>Seite für Anmeldung und Bestätigung</th><td>' . (self::page_url() ? '<a href="' . esc_url(self::page_url()) . '">' . esc_html(self::page_url()) . '</a><p class="description">Bestätigungs- und Verwaltungsschritte erscheinen auf dieser Seite in deinem Theme.</p>' : '<p class="description">Noch keine veröffentlichte Seite mit dem Baustein „Rundmail-Anmeldung“ gefunden. Leg eine Seite an (zum Beispiel „Rundmail“) und setz den Baustein ein. Bis dahin erscheinen Bestätigungen als schlichte WordPress-Seite.</p>') . '</td></tr></table>';
         submit_button('Einstellungen speichern');
-        echo '</form><h2>Einrichtung und Betrieb</h2><ol><li>Brevo-Konto, Absenderdomain und Adresse verifizieren; einen eigenen Ordner anlegen und dessen ID oben eintragen.</li><li>Testmodus verwenden und die E-Mail-Vorschau an eigenen Inhalten prüfen.</li><li>Live-Versand bewusst freigeben; danach echte Anmeldung und Abmeldung an einer eigenen Adresse testen.</li><li>Für verlässliche Zeitfenster einen Server-Cron alle fünf Minuten einrichten. WordPress-Cron hängt sonst von Seitenaufrufen ab; Zustellung ist keine minutengenaue Garantie.</li></ol><p>Pro Einrichtung und Thema erstellt das Plugin eine eigene Liste. Nutzen Sie diese Listen ausschließlich für Konstanth; sie werden vor Kampagnen mit den lokalen, bestätigten Abonnements abgeglichen. Globale Brevo-Sperren werden nicht aufgehoben. Die allgemeine Brevo-Abmeldung im E-Mail-Fuß beendet E-Mails des gesamten Brevo-Kontos; der Verwaltungslink erlaubt einzelne lokale Abonnements.</p><p>Verzögerung: „24 Stunden nach Veröffentlichung“ zählt ab dem Veröffentlichungszeitpunkt des Eintrags, auch wenn die Rundmail-Option erst später gesetzt wird. Bearbeiten löst keinen zweiten Versand aus. Ein Testlauf kann nur im Verwaltungsbereich ausdrücklich erneut eingeplant werden.</p><h2>Listen nach unklarer API-Antwort zuordnen</h2><p>Falls eine Listenanlage unterbrochen wurde, zuerst in Brevo nach „Konstanth ID Thema“ suchen. Erst dann die vorhandene Listen-ID eintragen. Dadurch wird keine neue Kampagne gesendet.</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="kn_mail_action"><input type="hidden" name="operation" value="map_list">';
+        echo '</form></section><section class="kn-admin-panel"><h2>Betrieb</h2><ol><li>Im Testmodus die Mailvorschau an eigenen Inhalten prüfen.</li><li>Live-Versand bewusst freigeben; danach echte Anmeldung und Abmeldung an einer eigenen Adresse testen.</li><li>Für verlässliche Zeitfenster beim Hoster einen Server-Cron alle fünf Minuten einrichten. WordPress-Cron hängt sonst von Seitenaufrufen ab; Zustellung ist keine minutengenaue Garantie.</li></ol><p>Pro Einrichtung und Thema legt konstanth eine eigene Liste an. Nutze diese Listen ausschließlich für konstanth; sie werden vor jeder Rundmail mit den bestätigten Abonnements abgeglichen. Globale Brevo-Sperren werden nicht aufgehoben. Die allgemeine Brevo-Abmeldung im E-Mail-Fuß beendet E-Mails des gesamten Brevo-Kontos; der Verwaltungslink erlaubt einzelne Abonnements.</p><p>Verzögerung: „Nach 24 h“ zählt ab dem Veröffentlichungszeitpunkt des Eintrags, auch wenn die Rundmail erst später gewählt wird. Bearbeiten löst keinen zweiten Versand aus. Ein Testlauf kann nur unter „Rundmails“ ausdrücklich erneut eingeplant werden.</p></section><section class="kn-admin-panel"><h2>Listen nach unklarer API-Antwort zuordnen</h2><p>Falls eine Listenanlage unterbrochen wurde, zuerst in Brevo nach „Konstanth ID Thema“ suchen. Erst dann die vorhandene Listen-ID eintragen. Dadurch wird keine neue Kampagne gesendet.</p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="kn_mail_action"><input type="hidden" name="operation" value="map_list">';
         wp_nonce_field('kn_mail_action');
         echo '<p><label>Einrichtungs-ID (0 für Themenlisten) <input name="org_id" type="number" min="0" required></label> <label>Thema <select name="topic">';
         foreach(self::topics() as $k=>$v) { echo '<option value="' . esc_attr($k) . '">' . esc_html($v) . '</option>'; }
         if (class_exists('KN_Categories')) { foreach (KN_Categories::terms('kn_topic') as $term) { echo '<option value="' . esc_attr(self::topic_key($term->term_id)) . '">Themenliste: ' . esc_html($term->name) . '</option>'; } }
         echo '</select></label> <label>Brevo Listen-ID <input name="list_id" type="number" min="1" required></label></p>';
-        submit_button('Vorhandene Liste prüfen und zuordnen','secondary'); echo '</form></div>';
+        submit_button('Vorhandene Liste prüfen und zuordnen','secondary'); echo '</form></section></div>';
     }
 
+    /** "Verbindung prüfen": reads account, senders and folder at Brevo with the saved key. Sends nothing, so it also works in test mode. */
+    public static function connection_report() {
+        $s = self::settings(); $key = defined('KN_BREVO_API_KEY') ? (string) KN_BREVO_API_KEY : (string) $s['api_key'];
+        if ($key === '') { return [[false, 'Noch kein API-Schlüssel gespeichert.']]; }
+        $get = function ($path) use ($key) {
+            $r = wp_remote_get('https://api.brevo.com/v3/' . $path, ['timeout'=>15, 'redirection'=>0, 'headers'=>['api-key'=>$key, 'Accept'=>'application/json']]);
+            return is_wp_error($r) ? [0, []] : [(int) wp_remote_retrieve_response_code($r), (array) json_decode(wp_remote_retrieve_body($r), true)];
+        };
+        [$code, $account] = $get('account');
+        if ($code === 401) { return [[false, self::error_text('kn_brevo_401')]]; }
+        if ($code === 0) { return [[false, 'Brevo war nicht erreichbar. Prüfe, ob dein Server Verbindungen zu api.brevo.com erlaubt.']]; }
+        if ($code !== 200) { return [[false, 'Brevo hat die Anfrage abgelehnt (HTTP ' . $code . ').']]; }
+        $report = [[true, 'Verbindung zu Brevo steht' . (!empty($account['email']) && is_string($account['email']) ? ' (Konto ' . sanitize_email($account['email']) . ')' : '') . '.']];
+        [$sent, $senders] = $get('senders'); $confirmed = false;
+        foreach ((array) ($senders['senders'] ?? []) as $sender) { if (is_array($sender) && strcasecmp((string) ($sender['email'] ?? ''), (string) $s['sender_email']) === 0 && !empty($sender['active'])) { $confirmed = true; } }
+        $report[] = !is_email($s['sender_email']) ? [false, 'Noch keine Absenderadresse eingetragen.'] : ($sent !== 200 ? [false, 'Brevo hat die Frage nach den Absendern nicht beantwortet' . ($sent ? ' (HTTP ' . $sent . ')' : '') . '. Bitte später erneut prüfen.'] : ($confirmed ? [true, 'Die Absenderadresse ' . $s['sender_email'] . ' ist bei Brevo bestätigt.'] : [false, 'Die Absenderadresse ' . $s['sender_email'] . ' ist bei Brevo nicht als bestätigter Absender eingetragen.']));
+        $folder = (int) $s['folder_id'] > 0 ? $get('contacts/folders/' . (int) $s['folder_id'])[0] : 0;
+        if ($folder === 200) { $report[] = [true, 'Der Ordner mit der ID ' . (int) $s['folder_id'] . ' ist vorhanden.']; return $report; }
+        // Only "not found" means the folder is missing; other answers are a disturbance at Brevo or on the way there.
+        if ((int) $s['folder_id'] > 0 && $folder !== 404) { $report[] = [false, 'Brevo hat die Frage nach dem Ordner ' . (int) $s['folder_id'] . ' nicht beantwortet' . ($folder ? ' (HTTP ' . $folder . ')' : '') . '. Bitte später erneut prüfen.']; return $report; }
+        // Without a valid folder the check names the folders of the account with their numbers, so nobody has to search Brevo for them.
+        [$listed, $list] = $get('contacts/folders?limit=50&offset=0'); $names = [];
+        foreach ((array) ($list['folders'] ?? []) as $item) { if (is_array($item) && isset($item['id'], $item['name'])) { $names[] = sanitize_text_field((string) $item['name']) . ' (ID ' . (int) $item['id'] . ')'; } }
+        $more = isset($list['count']) && (int) $list['count'] > count($names) ? ' und weitere' : '';
+        $known = $listed !== 200 ? ' Die Ordnerliste konnte gerade nicht gelesen werden.' : ($names ? ' Ordner in deinem Brevo-Konto: ' . implode(', ', $names) . $more . '.' : ' In deinem Brevo-Konto gibt es noch keinen Ordner; leg einen an, zum Beispiel „konstanth“.');
+        $report[] = [false, ((int) $s['folder_id'] > 0 ? 'Einen Ordner mit der ID ' . (int) $s['folder_id'] . ' gibt es in diesem Brevo-Konto nicht.' : 'Noch keine Ordner-ID eingetragen.') . $known];
+        return $report;
+    }
+    public static function check_connection() {
+        if (!current_user_can('manage_options')) { wp_die('Keine Berechtigung.', '', ['response'=>403]); }
+        check_admin_referer('kn_brevo_check');
+        set_transient('kn_brevo_check_' . get_current_user_id(), self::connection_report(), 10 * MINUTE_IN_SECONDS);
+        wp_safe_redirect(admin_url('admin.php?page=kn-settings&checked=1')); exit;
+    }
     public static function save_settings() {
         if (!current_user_can('manage_options')) { wp_die('Keine Berechtigung.', '', ['response'=>403]); }
         check_admin_referer('kn_mail_settings');
@@ -810,7 +870,7 @@ class KN_Mail {
         global $wpdb;
         if (!current_user_can('manage_options') && !current_user_can('kn_access')) { wp_die('Keine Berechtigung.', '', ['response'=>403]); }
         $admin = current_user_can('manage_options'); $org = $admin ? 0 : KN_Core::org_id();
-        if (!$admin && !$org) { echo '<div class="wrap"><h1>Rundmails</h1><p>Ihr Zugang ist keiner Einrichtung zugeordnet.</p></div>'; return; }
+        if (!$admin && !$org) { echo '<div class="wrap"><h1>Rundmails</h1><p>Dein Zugang ist keiner Einrichtung zugeordnet.</p></div>'; return; }
         $jobs = self::table('jobs'); $sub = self::table('subscribers');
         $where = $admin ? '' : $wpdb->prepare(' WHERE org_id=%d', $org);
         $rows = $wpdb->get_results("SELECT * FROM $jobs" . $where . ' ORDER BY id DESC LIMIT 100');
@@ -845,7 +905,7 @@ class KN_Mail {
                 foreach ($errors as $e) { echo '<li>' . esc_html(wp_date('d.m.Y H:i', (int)$e['time']) . ' · ' . ($e['context'] === 'confirmation' ? 'Bestätigungsmail' : 'Verwaltungslink') . ' · ' . self::error_text($e['code'])) . '</li>'; }
                 echo '</ul><p>Empfängeradressen werden hier bewusst nicht gespeichert.</p>';
             }
-            echo '<p><a href="' . esc_url(admin_url('admin.php?page=kn-settings')) . '">Versand konfigurieren</a></p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="kn_mail_action"><input type="hidden" name="operation" value="run">' . wp_nonce_field('kn_mail_action','_wpnonce',true,false) . '<p><button class="button" type="submit">Fällige Warteschlange jetzt verarbeiten</button></p></form><p>Bei „Unklar“ oder vorhandener Brevo-Kampagnen-ID erfolgt keine Wiederholung. Suchen Sie den Auftrag in Brevo; dort kann eine bereits erzeugte Kampagne manuell geprüft und freigegeben werden.</p>';
+            echo '<p><a href="' . esc_url(admin_url('admin.php?page=kn-settings')) . '">Versand konfigurieren</a></p><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="kn_mail_action"><input type="hidden" name="operation" value="run">' . wp_nonce_field('kn_mail_action','_wpnonce',true,false) . '<p><button class="button" type="submit">Fällige Warteschlange jetzt verarbeiten</button></p></form><p>Bei „Unklar“ oder vorhandener Brevo-Kampagnen-ID erfolgt keine Wiederholung. Such den Auftrag in Brevo; dort kann eine bereits erzeugte Kampagne manuell geprüft und freigegeben werden.</p>';
         }
         echo '</div>';
     }

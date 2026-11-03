@@ -9,8 +9,11 @@ class KN_Frontend {
     private static $colors_added = false;
     private $own_image = false;
 
+    /** Every shortcode name and the method that renders it; also tells assets() which pages need the stylesheet. */
+    const SHORTCODES = array('konstanth_events' => 'events', 'konstanth_termine' => 'events', 'konstanth_veranstaltungen' => 'events', 'konstanth_jobs' => 'jobs', 'konstanth_stellen' => 'jobs', 'konstanth_institutions' => 'institutions', 'konstanth_institutionen' => 'institutions', 'konstanth_news' => 'news', 'konstanth_donations' => 'donations', 'konstanth_foerdern' => 'donations', 'konstanth_aktuelle_termine' => 'upcoming', 'konstanth_aktuelle_veranstaltungen' => 'upcoming', 'konstanth_upcoming' => 'upcoming');
+
     public function __construct() {
-        foreach (array('konstanth_events' => 'events', 'konstanth_termine' => 'events', 'konstanth_jobs' => 'jobs', 'konstanth_stellen' => 'jobs', 'konstanth_institutions' => 'institutions', 'konstanth_institutionen' => 'institutions', 'konstanth_news' => 'news', 'konstanth_donations' => 'donations', 'konstanth_foerdern' => 'donations') as $tag => $method) {
+        foreach (self::SHORTCODES as $tag => $method) {
             add_shortcode($tag, array($this, $method));
         }
         add_action('wp_enqueue_scripts', array($this, 'assets'));
@@ -21,6 +24,9 @@ class KN_Frontend {
         add_action('wp_head', array($this, 'print_schema'));
         // Block themes print the featured image in their single template; the detail layout already shows it once.
         add_filter('post_thumbnail_html', array($this, 'single_image'), 10, 2);
+        // The event page shows its title in the banner card; the theme's own title line is dropped there (block themes here, classic themes by a body class in the stylesheet).
+        add_filter('render_block_core/post-title', array($this, 'theme_title'), 10, 3);
+        add_filter('body_class', function ($classes) { if (is_singular('kn_event')) { $classes[] = 'kn-event-page-active'; } return $classes; });
         add_action('init', array($this, 'register_blocks'));
         add_filter('block_categories_all', function ($categories) { $categories[] = array('slug' => 'konstanth', 'title' => 'konstanth'); return $categories; });
         // The block editor shows the same styles as the website, including the category colours.
@@ -37,10 +43,11 @@ class KN_Frontend {
         $post = get_queried_object();
         if (is_singular(array('kn_event', 'kn_job', 'kn_news', 'kn_institution'))) { self::enqueue(); return; }
         if ($post instanceof WP_Post) {
-            foreach (array('konstanth_events', 'konstanth_termine', 'konstanth_jobs', 'konstanth_stellen', 'konstanth_institutions', 'konstanth_institutionen', 'konstanth_news', 'konstanth_donations', 'konstanth_foerdern', 'konstanth_newsletter', 'kn_subscribe') as $tag) {
+            // The newsletter form is registered by KN_Mail but uses the same stylesheet.
+            foreach (array_merge(array_keys(self::SHORTCODES), array('konstanth_newsletter', 'kn_subscribe')) as $tag) {
                 if (has_shortcode($post->post_content, $tag)) { self::enqueue(); return; }
             }
-            foreach (array('events', 'jobs', 'institutions', 'news', 'donations', 'newsletter') as $block) { if (function_exists('has_block') && has_block('konstanth/' . $block, $post)) { self::enqueue(); return; } }
+            foreach (array('events', 'jobs', 'institutions', 'news', 'donations', 'newsletter', 'upcoming') as $block) { if (function_exists('has_block') && has_block('konstanth/' . $block, $post)) { self::enqueue(); return; } }
         }
     }
 
@@ -95,6 +102,9 @@ class KN_Frontend {
                 return $this->$method(array('institution' => absint($a['institution'] ?? 0), 'limit' => absint($a['limit'] ?? 12), 'layout' => ($a['layout'] ?? 'grid') === 'list' ? 'list' : 'grid', 'heading' => sanitize_text_field($a['heading'] ?? '')));
             }));
         }
+        register_block_type('konstanth/upcoming', array('api_version' => 3, 'editor_script' => 'kn-blocks', 'attributes' => array('institution' => array('type' => 'number', 'default' => 0), 'limit' => array('type' => 'number', 'default' => 3), 'heading' => array('type' => 'string', 'default' => 'Unsere aktuellen Veranstaltungen'), 'button' => array('type' => 'string', 'default' => 'Alle Veranstaltungen'), 'link' => array('type' => 'string', 'default' => '')), 'render_callback' => function ($a) {
+            return $this->upcoming(array('institution' => absint($a['institution'] ?? 0), 'limit' => absint($a['limit'] ?? 3), 'heading' => (string) ($a['heading'] ?? ''), 'button' => (string) ($a['button'] ?? ''), 'link' => (string) ($a['link'] ?? '')));
+        }));
         register_block_type('konstanth/newsletter', array('api_version' => 3, 'editor_script' => 'kn-blocks', 'attributes' => array('institution' => array('type' => 'number', 'default' => 0)), 'render_callback' => function ($a) { return KN_Mail::subscribe_form(array('institution' => absint($a['institution'] ?? 0))); }));
     }
 
@@ -182,18 +192,18 @@ class KN_Frontend {
         $html = $this->open($atts, 'kn-events');
         $html .= '<div class="kn-events-shell"><aside class="kn-filter-panel"><form method="get" class="kn-filter-form" action="' . esc_url(remove_query_arg($key)) . '">';
         $html .= $this->route_fields($key) . '<input type="hidden" name="' . esc_attr($key) . '[filter]" value="1"><input type="hidden" name="' . esc_attr($key) . '[view]" value="' . esc_attr($view) . '"><input type="hidden" name="' . esc_attr($key) . '[month]" value="' . esc_attr($state['month']) . '">';
-        $html .= '<label class="kn-field-label" for="' . esc_attr($key) . '-search">Termine suchen</label><input id="' . esc_attr($key) . '-search" class="kn-search" type="search" name="' . esc_attr($key) . '[q]" value="' . esc_attr($search) . '" placeholder="Titel oder Beschreibung">';
+        $html .= '<label class="kn-field-label" for="' . esc_attr($key) . '-search">Veranstaltungen suchen</label><input id="' . esc_attr($key) . '-search" class="kn-search" type="search" name="' . esc_attr($key) . '[q]" value="' . esc_attr($search) . '" placeholder="Titel oder Beschreibung">';
         // On narrow screens the script collapses the choices into this summary; without script everything stays open.
         $html .= '<details class="kn-filter-details" open><summary class="kn-filter-summary">Themen und Einrichtungen wählen</summary><div class="kn-filter-groups">';
         $html .= $this->checkboxes($key, 'topics', 'Themen', $terms, $topics, 'term_id');
         $html .= $this->checkboxes($key, 'orgs', 'Einrichtungen', $organizations, $orgs, 'ID');
         $html .= '</div></details>';
-        $html .= '<p class="kn-filter-hint">Mehrfachauswahl möglich. Ohne Auswahl erscheinen keine Termine.</p><div class="kn-filter-actions"><button class="kn-button" type="submit">Ergebnisse anzeigen</button><a class="kn-reset" rel="nofollow" href="' . esc_url(remove_query_arg($key)) . '">Filter zurücksetzen</a></div><p class="kn-filter-feedback" role="status" aria-live="polite"></p></form></aside>';
-        $html .= '<div class="kn-event-results"><div class="kn-results-toolbar"><p class="kn-result-count">' . esc_html(number_format_i18n($query->found_posts)) . ' ' . ($query->found_posts === 1 ? 'Termin' : 'Termine') . '</p><nav class="kn-view-switch" aria-label="Terminansicht">';
+        $html .= '<p class="kn-filter-hint">Mehrfachauswahl möglich. Ohne Auswahl erscheinen keine Veranstaltungen.</p><div class="kn-filter-actions"><button class="kn-button" type="submit">Ergebnisse anzeigen</button><a class="kn-reset" rel="nofollow" href="' . esc_url(remove_query_arg($key)) . '">Filter zurücksetzen</a></div><p class="kn-filter-feedback" role="status" aria-live="polite"></p></form></aside>';
+        $html .= '<div class="kn-event-results"><div class="kn-results-toolbar"><p class="kn-result-count">' . esc_html(number_format_i18n($query->found_posts)) . ' ' . ($query->found_posts === 1 ? 'Veranstaltung' : 'Veranstaltungen') . '</p><nav class="kn-view-switch" aria-label="Ansicht der Veranstaltungen">';
         foreach (array('list' => 'Liste', 'calendar' => 'Kalender') as $mode => $label) { $next = $state; $next['view'] = $mode; $next['page'] = 1; $html .= '<a rel="nofollow" href="' . esc_url(add_query_arg($key, $next)) . '"' . ($view === $mode ? ' aria-current="true"' : '') . '>' . esc_html($label) . '</a>'; }
         $html .= '</nav></div>';
         if ($view === 'calendar') { $html .= $this->calendar($query->posts, $month_date, $key, $state); }
-        elseif (!$query->posts) { $html .= $this->empty_state('Keine passenden Termine', 'Ändern Sie Ihre Auswahl oder sehen Sie später wieder vorbei.'); }
+        elseif (!$query->posts) { $html .= $this->empty_state('Keine passenden Veranstaltungen', 'Ändern Sie Ihre Auswahl oder sehen Sie später wieder vorbei.'); }
         else {
             // Month headings structure long lists; each month is its own card group.
             $html .= '<div class="kn-event-list">'; $current = '';
@@ -226,7 +236,7 @@ class KN_Frontend {
             if ($delta === '+1 month') { $html .= '<h3>' . esc_html(wp_date('F Y', $month->getTimestamp())) . '</h3>'; }
             $html .= '<a class="kn-month-arrow" rel="nofollow" aria-label="' . esc_attr($label) . '" href="' . esc_url(add_query_arg($key, $next)) . '">' . ($delta === '-1 month' ? '←' : '→') . '</a>';
         }
-        $html .= '</nav><p class="kn-calendar-note">Kommende und laufende Termine. Bei mehr als 100 Treffern weitere Ergebnisseiten beachten.</p><div class="kn-calendar-grid">';
+        $html .= '</nav><p class="kn-calendar-note">Kommende und laufende Veranstaltungen. Bei mehr als 100 Treffern weitere Ergebnisseiten beachten.</p><div class="kn-calendar-grid">';
         foreach (array('Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So') as $day) { $html .= '<div class="kn-weekday" aria-hidden="true">' . esc_html($day) . '</div>'; }
         $offset = (int) $month->format('N') - 1; $days = (int) $month->format('t');
         for ($i = 0; $i < $offset; $i++) { $html .= '<div class="kn-calendar-blank" aria-hidden="true"></div>'; }
@@ -296,8 +306,73 @@ class KN_Frontend {
         $start = (int) get_post_meta($post->ID, '_kn_start', true); $cancelled = get_post_meta($post->ID, '_kn_cancelled', true);
         $html = '<article class="kn-card kn-event-card' . ($cancelled ? ' kn-is-cancelled' : '') . '"' . $this->term_attr($post) . '><time class="kn-date-stamp" datetime="' . esc_attr(wp_date('c', $start)) . '"><span class="kn-date-weekday">' . esc_html(wp_date('D', $start)) . '</span><span class="kn-date-day">' . esc_html(wp_date('j', $start)) . '</span><span class="kn-date-month">' . esc_html(wp_date('M', $start)) . '</span></time><div class="kn-card-body">' . $this->image($post) . $this->badges($post, 'kn_topic', $cancelled ? '<span class="kn-badge kn-status-cancelled">Abgesagt</span>' : '') . '<h4><a href="' . esc_url(get_permalink($post)) . '">' . esc_html(get_the_title($post)) . '</a></h4>' . $this->owner_line($post);
         $html .= '<p class="kn-card-meta">' . esc_html(wp_date('H:i', $start) . ' Uhr');
-        $location = get_post_meta($post->ID, '_kn_location', true); if ($location) { $html .= ' · ' . esc_html($location); }
-        return $html . '</p><p class="kn-excerpt">' . $this->excerpt($post) . '</p><a class="kn-text-link" href="' . esc_url(get_permalink($post)) . '">Zum Termin <span aria-hidden="true">→</span></a></div></article>';
+        $location = KN_Core::place($post->ID)['short']; if ($location !== '') { $html .= ' · ' . esc_html($location); }
+        return $html . '</p><p class="kn-excerpt">' . $this->excerpt($post) . '</p><a class="kn-text-link" href="' . esc_url(get_permalink($post)) . '">Zur Veranstaltung <span aria-hidden="true">→</span></a></div></article>';
+    }
+
+    /** The next events side by side, for example on the home page: heading, a button in the theme's own button style and one card per event. */
+    public function upcoming($atts = array()) {
+        $atts = shortcode_atts(array('institution' => 0, 'limit' => 3, 'heading' => 'Unsere aktuellen Veranstaltungen', 'button' => 'Alle Veranstaltungen', 'link' => ''), $atts);
+        $limit = max(1, min(12, absint($atts['limit'])));
+        $heading = sanitize_text_field($atts['heading']); $button = sanitize_text_field($atts['button']);
+        $link = $this->target_url($atts['link']) ?: self::events_page_url();
+        $organizations = $this->organizations(absint($atts['institution'])); $posts = array();
+        if ($organizations) {
+            // Running and future events in chronological order; cancelled ones are left out here, the full list still shows them.
+            $query = new WP_Query(array('post_type' => 'kn_event', 'post_status' => 'publish', 'has_password' => false, 'posts_per_page' => $limit, 'no_found_rows' => true, 'meta_key' => '_kn_start', 'orderby' => 'meta_value_num', 'order' => 'ASC', 'meta_query' => array('relation' => 'AND', $this->organization_query($organizations), array('key' => '_kn_end', 'value' => time(), 'compare' => '>=', 'type' => 'NUMERIC'), array('relation' => 'OR', array('key' => '_kn_cancelled', 'compare' => 'NOT EXISTS'), array('key' => '_kn_cancelled', 'value' => '1', 'compare' => '!=')))));
+            $posts = array_values(array_filter($query->posts, array(__CLASS__, 'public_post')));
+        }
+        // The heading and the button sit outside the plugin's scoped styles, so the theme styles them like its own.
+        $html = '<div class="kn-upcoming">';
+        if ($heading !== '' || ($button !== '' && $link)) {
+            $html .= '<div class="kn-upcoming-head">' . ($heading !== '' ? '<h2 class="kn-upcoming-title">' . esc_html($heading) . '</h2>' : '<span></span>');
+            if ($button !== '' && $link) { $html .= '<div class="wp-block-button kn-upcoming-more"><a class="wp-block-button__link wp-element-button" href="' . esc_url($link) . '">' . esc_html($button) . '</a></div>'; }
+            $html .= '</div>';
+        }
+        $html .= self::portal('kn-upcoming-cards');
+        if (!$posts) { $html .= '<p class="kn-upcoming-empty">Zurzeit sind keine Veranstaltungen geplant.</p>'; }
+        else {
+            $html .= '<div class="kn-upcoming-grid" style="--kn-upcoming-cols:' . (int) min(3, count($posts)) . '">';
+            foreach ($posts as $post) { $html .= $this->upcoming_card($post); }
+            $html .= '</div>';
+        }
+        return $html . '</section></div>';
+    }
+
+    private function upcoming_card($post) {
+        $start = (int) get_post_meta($post->ID, '_kn_start', true); $url = get_permalink($post); $image = has_post_thumbnail($post);
+        // Without a picture the area shows the date in the colour of the first topic.
+        $media = $image ? get_the_post_thumbnail($post, 'medium_large', array('loading' => 'lazy', 'alt' => '')) : '<span class="kn-upcoming-stamp"><span class="kn-date-day">' . esc_html(wp_date('j', $start)) . '</span><span class="kn-date-month">' . esc_html(wp_date('M', $start)) . '</span></span>';
+        $meta = array(); $owner = KN_Core::owner($post->ID);
+        if (self::public_org($owner)) { $meta[] = get_the_title($owner); }
+        $location = KN_Core::place($post->ID)['short']; if ($location !== '') { $meta[] = $location; }
+        $html = '<article class="kn-card kn-upcoming-card"' . $this->term_attr($post) . '><a class="kn-upcoming-media' . ($image ? '' : ' kn-upcoming-placeholder') . '" href="' . esc_url($url) . '" tabindex="-1" aria-hidden="true">' . $media . '</a>';
+        $html .= '<div class="kn-card-body"><p class="kn-upcoming-date"><time datetime="' . esc_attr(wp_date('c', $start)) . '"><strong>' . esc_html(wp_date('D., j. F', $start)) . '</strong> · ' . esc_html(wp_date('H:i', $start)) . ' Uhr</time></p>' . $this->badges($post);
+        $html .= '<h3><a href="' . esc_url($url) . '">' . esc_html(get_the_title($post)) . '</a></h3>' . ($meta ? '<p class="kn-card-meta">' . esc_html(implode(' · ', $meta)) . '</p>' : '');
+        return $html . '<a class="kn-text-link" href="' . esc_url($url) . '">Zur Veranstaltung <span aria-hidden="true">→</span></a></div></article>';
+    }
+
+    /** A link given in the block or shortcode: a full http(s) address or a path on this website such as /veranstaltungen/. */
+    private function target_url($value) {
+        $value = trim((string) $value);
+        if ($value === '') { return ''; }
+        if ($value[0] === '/' && strpos($value, '//') !== 0) { return esc_url_raw(home_url($value)); }
+        return $this->http_url($value);
+    }
+
+    /** The published page that shows the event list (shortcode or block), for buttons that lead to all events. */
+    public static function events_page_url() {
+        global $wpdb;
+        // Cards, the upcoming block and every event page ask for it; one query per request is enough.
+        static $cached = null;
+        if (null !== $cached) { return $cached; }
+        // Block comments always have a space after the name, with or without settings.
+        $needles = array('[konstanth_events', '[konstanth_termine', '[konstanth_veranstaltungen', '<!-- wp:konstanth/events ');
+        $where = implode(' OR ', array_fill(0, count($needles), 'post_content LIKE %s'));
+        $params = array_map(function ($needle) use ($wpdb) { return '%' . $wpdb->esc_like($needle) . '%'; }, $needles);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where only repeats a fixed placeholder; all values are prepared.
+        $id = (int) $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_type = 'page' AND post_status = 'publish' AND post_password = '' AND ($where) ORDER BY menu_order ASC, ID ASC LIMIT 1", $params));
+        return $cached = $id ? (string) get_permalink($id) : '';
     }
 
     public function jobs($atts = array()) { return $this->listing('kn_job', $atts); }
@@ -330,7 +405,7 @@ class KN_Frontend {
     }
 
     private function institution_card($post, $donation = false) {
-        $html = '<article class="kn-card kn-institution-card"' . $this->term_attr($post, 'kn_institution_type') . '><div class="kn-card-body">' . $this->logo($post) . $this->badges($post, 'kn_institution_type') . '<h3><a href="' . esc_url(get_permalink($post)) . '">' . esc_html(get_the_title($post)) . '</a></h3><p class="kn-card-meta">' . esc_html(get_post_meta($post->ID, '_kn_city', true)) . '</p>';
+        $html = '<article class="kn-card kn-institution-card"' . $this->term_attr($post, 'kn_institution_type') . '><div class="kn-card-body">' . $this->logo($post) . $this->badges($post, 'kn_institution_type') . '<h3><a href="' . esc_url(get_permalink($post)) . '">' . esc_html(get_the_title($post)) . '</a></h3><p class="kn-card-meta">' . esc_html(trim(get_post_meta($post->ID, '_kn_zip', true) . ' ' . get_post_meta($post->ID, '_kn_city', true))) . '</p>';
         if ($donation) { $html .= '<div class="kn-rich-text">' . $this->safe_html(get_post_meta($post->ID, '_kn_donation', true)) . '</div>'; $url = $this->http_url(get_post_meta($post->ID, '_kn_donation_url', true)); if ($url) { $html .= '<a class="kn-button kn-button-secondary" href="' . esc_url($url) . '" rel="external noopener">Einrichtung unterstützen ↗</a>'; } }
         else { $html .= '<p class="kn-excerpt">' . $this->excerpt($post) . '</p><a class="kn-text-link" href="' . esc_url(get_permalink($post)) . '">Einrichtung kennenlernen <span aria-hidden="true">→</span></a>'; }
         return $html . '</div></article>';
@@ -344,6 +419,11 @@ class KN_Frontend {
         $post = get_post(); $public = self::public_post($post);
         // Editors preview their own drafts; everyone else sees nothing until it is public.
         if (!$public && !($post && KN_Core::can_manage($post->ID))) { $this->detail = ''; return "\n" . self::PLACEHOLDER . "\n"; }
+        if ($post->post_type === 'kn_event') {
+            // Encode brackets so no later content filter can execute author text as a shortcode.
+            $this->detail = str_replace(array('[', ']'), array('&#91;', '&#93;'), $this->event_page($post, $public));
+            return "\n" . self::PLACEHOLDER . "\n";
+        }
         $html = $this->open(array(), 'kn-detail');
         if (!$public) { $html .= '<p class="kn-notice" role="status">Vorschau – dieser Inhalt ist noch nicht öffentlich sichtbar.</p>'; }
         $taxonomy = $post->post_type === 'kn_institution' ? 'kn_institution_type' : 'kn_topic';
@@ -354,18 +434,6 @@ class KN_Frontend {
         if ($post->post_type === 'kn_institution') { $html = str_replace('<div class="kn-detail-header"', '<div class="kn-detail-header kn-has-logo"', $html); $html = preg_replace('/(<div class="kn-detail-header[^>]*>)/', '$1' . str_replace('$', '\\$', $this->logo($post)), $html, 1); }
         elseif (has_post_thumbnail($post) && $post->post_type !== 'kn_event') { $html .= '<figure class="kn-detail-image">' . get_the_post_thumbnail($post, 'large', array('loading' => 'eager')) . '</figure>'; }
         $this->own_image = false;
-        if ($post->post_type === 'kn_event') {
-            $start = (int) get_post_meta($post->ID, '_kn_start', true); $end = (int) get_post_meta($post->ID, '_kn_end', true);
-            $cancelled = get_post_meta($post->ID, '_kn_cancelled', true); $past = max($start, $end) && max($start, $end) < time();
-            if ($cancelled) { $html .= '<p class="kn-notice" role="status"><strong>Dieser Termin wurde abgesagt.</strong></p>'; }
-            elseif ($past) { $html .= '<p class="kn-notice" role="status">Dieser Termin hat bereits stattgefunden.</p>'; }
-            $same_day = $end > $start && wp_date('Ymd', $end) === wp_date('Ymd', $start);
-            $html .= '<dl class="kn-facts"><div><dt>Wann</dt><dd><time datetime="' . esc_attr(wp_date('c', $start)) . '">' . esc_html(wp_date('l, j. F Y · H:i', $start) . ($same_day ? '–' . wp_date('H:i', $end) : '')) . ' Uhr</time>' . ($end > $start && !$same_day ? '<br>bis ' . esc_html(wp_date('l, j. F Y · H:i', $end)) . ' Uhr' : '') . '</dd></div>' . $this->fact('Wo', get_post_meta($post->ID, '_kn_location', true)) . '</dl>';
-            $registration = $this->http_url(get_post_meta($post->ID, '_kn_registration_url', true));
-            $html .= '<div class="kn-detail-actions">' . ($registration && !$cancelled && !$past ? '<a class="kn-button" href="' . esc_url($registration) . '" rel="external noopener">Zur Anmeldung <span aria-hidden="true">↗</span></a>' : '');
-            $html .= ($cancelled || $past ? '' : '<a class="kn-button kn-button-secondary" rel="nofollow" href="' . esc_url(add_query_arg(array('action' => 'kn_ics', 'event' => $post->ID), admin_url('admin-post.php'))) . '">In den Kalender übernehmen <span aria-hidden="true">↓</span></a>') . '</div>';
-            if (has_post_thumbnail($post)) { $this->own_image = true; $html .= '<figure class="kn-detail-image">' . get_the_post_thumbnail($post, 'large', array('loading' => 'eager')) . '</figure>'; $this->own_image = false; }
-        }
         if ($post->post_type === 'kn_job') { $html .= '<dl class="kn-facts">' . $this->fact('Arbeitsort', get_post_meta($post->ID, '_kn_location', true)) . $this->fact('Umfang', get_post_meta($post->ID, '_kn_workload', true)) . $this->fact('Bewerbungsfrist', self::date_label(get_post_meta($post->ID, '_kn_deadline', true))) . '</dl>'; }
         $html .= '<div class="kn-rich-text">' . $this->safe_html($post->post_content);
         $public = get_post_meta($post->ID, '_kn_public_info', true); if ($public && trim($public) !== trim($post->post_content)) { $html .= $this->safe_html($public); }
@@ -383,6 +451,54 @@ class KN_Frontend {
         // Encode brackets so no later content filter can execute author text as a shortcode.
         $this->detail = str_replace(array('[', ']'), array('&#91;', '&#93;'), $html . '</article></section>');
         return "\n" . self::PLACEHOLDER . "\n";
+    }
+
+    /** Event page: banner with a card for date and title, picture and flyer on the left, text and facts on the right, a link to all events at the end. */
+    private function event_page($post, $public) {
+        $start = (int) get_post_meta($post->ID, '_kn_start', true); $end = (int) get_post_meta($post->ID, '_kn_end', true);
+        $cancelled = get_post_meta($post->ID, '_kn_cancelled', true); $past = max($start, $end) && max($start, $end) < time();
+        $same_day = $end > $start && wp_date('Ymd', $end) === wp_date('Ymd', $start);
+        $when = $end > $start && !$same_day ? wp_date('l, j. F Y · H:i', $start) . ' Uhr – ' . wp_date('l, j. F Y · H:i', $end) . ' Uhr' : wp_date('l, j. F Y', $start) . ' | ' . wp_date('H:i', $start) . ($same_day ? '–' . wp_date('H:i', $end) : '') . ' Uhr';
+        $banner = KN_Core::banner($post->ID);
+        $html = self::portal('kn-detail kn-event-page');
+        if (!$public) { $html .= '<p class="kn-notice" role="status">Vorschau – dieser Inhalt ist noch nicht öffentlich sichtbar.</p>'; }
+        $html .= '<article class="kn-event"' . $this->term_attr($post) . '><header class="kn-event-hero' . ($banner ? ' kn-has-banner' : '') . '">';
+        if ($banner) { $this->own_image = true; $html .= '<div class="kn-event-banner">' . wp_get_attachment_image($banner, 'full', false, array('class' => 'kn-event-banner-image', 'alt' => '', 'loading' => 'eager', 'sizes' => '100vw')) . '</div>'; $this->own_image = false; }
+        $html .= '<div class="kn-event-panel"><p class="kn-event-when"><time datetime="' . esc_attr(wp_date('c', $start)) . '">' . esc_html($when) . '</time></p><h1 class="kn-event-title">' . esc_html(get_the_title($post)) . '</h1>' . $this->badges($post) . '</div></header>';
+        $image = has_post_thumbnail($post); $flyer = $cancelled ? null : KN_Core::flyer($post->ID);
+        $html .= '<div class="kn-event-body' . ($image || $flyer ? '' : ' kn-event-single') . '">';
+        if ($image || $flyer) {
+            $html .= '<div class="kn-event-aside">';
+            if ($image) { $this->own_image = true; $html .= '<figure class="kn-event-image">' . get_the_post_thumbnail($post, 'large', array('loading' => 'eager')) . '</figure>'; $this->own_image = false; }
+            // The flyer is offered as the institution uploaded it.
+            if ($flyer) { $html .= '<a class="kn-event-flyer kn-flyer" href="' . esc_url($flyer['url']) . '" download>Flyer herunterladen <span class="kn-flyer-meta">(' . esc_html($flyer['type'] . ($flyer['size'] ? ', ' . size_format($flyer['size'], 1) : '')) . ')</span></a>'; }
+            $html .= '</div>';
+        }
+        $html .= '<div class="kn-event-main">';
+        if ($cancelled) { $html .= '<p class="kn-notice" role="status"><strong>Diese Veranstaltung wurde abgesagt.</strong></p>'; }
+        elseif ($past) { $html .= '<p class="kn-notice" role="status">Diese Veranstaltung hat bereits stattgefunden.</p>'; }
+        $html .= '<div class="kn-rich-text">' . $this->safe_html($post->post_content);
+        $info = get_post_meta($post->ID, '_kn_public_info', true); if ($info && trim($info) !== trim($post->post_content)) { $html .= $this->safe_html($info); }
+        $html .= '</div>';
+        $owner = KN_Core::owner($post->ID);
+        $place = KN_Core::place($post->ID);
+        $facts = $this->fact('Ort', implode("\n", array_filter(array_merge(array($place['name']), $place['lines']), 'strlen'))) . $this->fact('Eintritt', KN_Core::price($post->ID)) . (self::public_org($owner) ? '<div><dt>Veranstalter</dt><dd><a href="' . esc_url(get_permalink($owner)) . '">' . esc_html(get_the_title($owner)) . '</a></dd></div>' : '');
+        if ($facts !== '') { $html .= '<dl class="kn-facts">' . $facts . '</dl>'; }
+        $registration = $this->http_url(get_post_meta($post->ID, '_kn_registration_url', true));
+        $html .= '<div class="kn-detail-actions">' . ($registration && !$cancelled && !$past ? '<a class="kn-button" href="' . esc_url($registration) . '" rel="external noopener">Zur Anmeldung <span aria-hidden="true">↗</span></a>' : '');
+        // The calendar file opens the visitor's own calendar app (on phones directly, on computers with one click).
+        $html .= ($cancelled || $past ? '' : '<a class="kn-button kn-button-secondary" rel="nofollow" href="' . esc_url(add_query_arg(array('action' => 'kn_ics', 'event' => $post->ID), admin_url('admin-post.php'))) . '">In den Kalender <span aria-hidden="true">↓</span></a>') . '</div>';
+        $html .= $this->contact($post) . '</div></div>';
+        $all = self::events_page_url();
+        if ($all) { $html .= '<footer class="kn-event-footer"><a class="kn-event-all" href="' . esc_url($all) . '">Alle Veranstaltungen</a></footer>'; }
+        return $html . '</article></section>';
+    }
+
+    /** Block themes print the title with a block; on the event page the banner card carries it. */
+    public function theme_title($html, $block = array(), $instance = null) {
+        if (!is_singular('kn_event')) { return $html; }
+        $id = is_object($instance) && isset($instance->context['postId']) ? (int) $instance->context['postId'] : (int) get_the_ID();
+        return $id === (int) get_queried_object_id() ? '' : $html;
     }
 
     public function single_image($html, $post_id) {
@@ -411,9 +527,12 @@ class KN_Frontend {
         $post = get_post($post);
         if (!$post || $post->post_type !== 'kn_event' || !self::public_post($post)) { return array(); }
         $start = (int) get_post_meta($post->ID, '_kn_start', true); $end = max($start, (int) get_post_meta($post->ID, '_kn_end', true)); $org = KN_Core::owner($post->ID);
-        $location = (string) get_post_meta($post->ID, '_kn_location', true);
+        $place = KN_Core::place($post->ID);
         $schema = array('@context' => 'https://schema.org', '@type' => 'Event', 'name' => wp_strip_all_tags(get_the_title($post)), 'startDate' => wp_date('c', $start), 'endDate' => wp_date('c', $end), 'eventStatus' => get_post_meta($post->ID, '_kn_cancelled', true) ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled', 'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode', 'url' => get_permalink($post), 'description' => wp_trim_words(wp_strip_all_tags(strip_shortcodes($post->post_excerpt ?: $post->post_content)), 40));
-        $schema['location'] = array('@type' => 'Place', 'name' => $location ?: get_the_title($org), 'address' => $location ?: trim(get_post_meta($org, '_kn_address', true) . ', ' . get_post_meta($org, '_kn_city', true), ', '));
+        // A structured address where the event has one; older events only name the place, then the institution's address stands in.
+        $postal = array_filter(array('@type' => 'PostalAddress', 'streetAddress' => get_post_meta($post->ID, '_kn_address', true), 'postalCode' => get_post_meta($post->ID, '_kn_zip', true), 'addressLocality' => get_post_meta($post->ID, '_kn_city', true), 'addressRegion' => get_post_meta($post->ID, '_kn_region', true), 'addressCountry' => get_post_meta($post->ID, '_kn_country', true)), 'strlen');
+        $schema['location'] = array('@type' => 'Place', 'name' => $place['name'] ?: get_the_title($org), 'address' => count($postal) > 1 ? $postal : ($place['name'] ?: implode(', ', KN_Core::address_lines($org))));
+        if (KN_Core::price($post->ID) === 'kostenlos') { $schema['isAccessibleForFree'] = true; }
         if ($org) { $schema['organizer'] = array('@type' => 'Organization', 'name' => get_the_title($org), 'url' => get_permalink($org)); }
         if (has_post_thumbnail($post)) { $schema['image'] = array(get_the_post_thumbnail_url($post, 'large')); }
         return $schema;
@@ -434,9 +553,9 @@ class KN_Frontend {
     private function fact($label, $value) { return $value !== '' ? '<div><dt>' . esc_html($label) . '</dt><dd>' . nl2br(esc_html($value)) . '</dd></div>' : ''; }
 
     private function contact($post) {
-        $id = $post->ID; $email = get_post_meta($id, '_kn_email', true); $phone = get_post_meta($id, '_kn_phone', true); $address = get_post_meta($id, '_kn_address', true); $city = get_post_meta($id, '_kn_city', true); $website = $this->http_url(get_post_meta($id, '_kn_website', true));
-        if (!$email && !$phone && !$address && !$city && !$website) { return ''; }
-        $html = '<div class="kn-detail-box"><h2>Kontakt</h2><dl class="kn-facts">' . $this->fact('Adresse', trim($address . "\n" . $city));
+        $id = $post->ID; $email = get_post_meta($id, '_kn_email', true); $phone = get_post_meta($id, '_kn_phone', true); $address = $post->post_type === 'kn_institution' ? implode("\n", KN_Core::address_lines($id)) : ''; $website = $this->http_url(get_post_meta($id, '_kn_website', true));
+        if (!$email && !$phone && !$address && !$website) { return ''; }
+        $html = '<div class="kn-detail-box"><h2>Kontakt</h2><dl class="kn-facts">' . $this->fact('Adresse', $address);
         if ($email && is_email($email)) { $html .= '<div><dt>E-Mail</dt><dd><a href="' . esc_attr('mailto:' . sanitize_email($email)) . '">' . esc_html($email) . '</a></dd></div>'; }
         if ($phone) { $html .= '<div><dt>Telefon</dt><dd><a href="' . esc_attr('tel:' . preg_replace('/[^0-9+]/', '', $phone)) . '">' . esc_html($phone) . '</a></dd></div>'; }
         if ($website) { $html .= '<div><dt>Website</dt><dd><a href="' . esc_url($website) . '" rel="external noopener">Website besuchen ↗</a></dd></div>'; }
@@ -450,7 +569,8 @@ class KN_Frontend {
         $end = (int) get_post_meta($post->ID, '_kn_end', true); if ($end <= $start) { $end = $start + 3600; }
         $escape = function ($value) { $text = html_entity_decode(wp_strip_all_tags((string) $value), ENT_QUOTES | ENT_HTML5, 'UTF-8'); return str_replace(array('\\', "\r\n", "\r", "\n", ';', ','), array('\\\\', '\\n', '\\n', '\\n', '\\;', '\\,'), $text); };
         $description = get_post_meta($post->ID, '_kn_public_info', true) ?: $post->post_content;
-        $lines = array('BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//konstanth//Veranstaltungen//DE', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:kn-event-' . $post->ID . '-' . md5(home_url('/')) . '@konstanth', 'DTSTAMP:' . gmdate('Ymd\THis\Z'), 'DTSTART:' . gmdate('Ymd\THis\Z', $start), 'DTEND:' . gmdate('Ymd\THis\Z', $end), 'STATUS:' . (get_post_meta($post->ID, '_kn_cancelled', true) ? 'CANCELLED' : 'CONFIRMED'), 'SUMMARY:' . $escape(get_the_title($post)), 'DESCRIPTION:' . $escape($description), 'LOCATION:' . $escape(get_post_meta($post->ID, '_kn_location', true)), 'URL:' . get_permalink($post), 'END:VEVENT', 'END:VCALENDAR');
+        $price = KN_Core::price($post->ID); if ($price !== '') { $description = wp_strip_all_tags($description) . "\n\nEintritt: " . $price; }
+        $lines = array('BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//konstanth//Veranstaltungen//DE', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', 'UID:kn-event-' . $post->ID . '-' . md5(home_url('/')) . '@konstanth', 'DTSTAMP:' . gmdate('Ymd\THis\Z'), 'DTSTART:' . gmdate('Ymd\THis\Z', $start), 'DTEND:' . gmdate('Ymd\THis\Z', $end), 'STATUS:' . (get_post_meta($post->ID, '_kn_cancelled', true) ? 'CANCELLED' : 'CONFIRMED'), 'SUMMARY:' . $escape(get_the_title($post)), 'DESCRIPTION:' . $escape($description), 'LOCATION:' . $escape(KN_Core::place($post->ID)['text']), 'URL:' . get_permalink($post), 'END:VEVENT', 'END:VCALENDAR');
         $folded = array();
         foreach ($lines as $line) {
             while (strlen($line) > 75) { $bytes = 75; while ($bytes > 0 && (ord($line[$bytes]) & 0xC0) === 0x80) { $bytes--; } $folded[] = substr($line, 0, $bytes); $line = ' ' . substr($line, $bytes); }
@@ -461,7 +581,7 @@ class KN_Frontend {
 
     public function download_ics() {
         $id = isset($_GET['event']) && is_scalar($_GET['event']) ? absint($_GET['event']) : 0; $ics = self::ics_content($id);
-        if (!$ics) { wp_die('Dieser Termin ist nicht öffentlich verfügbar.', 'Termin nicht verfügbar', array('response' => 404)); }
-        nocache_headers(); header('Content-Type: text/calendar; charset=utf-8'); header('Content-Disposition: attachment; filename="konstanth-termin-' . $id . '.ics"'); header('X-Content-Type-Options: nosniff'); echo $ics; exit;
+        if (!$ics) { wp_die('Diese Veranstaltung ist nicht öffentlich verfügbar.', 'Veranstaltung nicht verfügbar', array('response' => 404)); }
+        nocache_headers(); header('Content-Type: text/calendar; charset=utf-8'); header('Content-Disposition: attachment; filename="konstanth-veranstaltung-' . $id . '.ics"'); header('X-Content-Type-Options: nosniff'); echo $ics; exit;
     }
 }

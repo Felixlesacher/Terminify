@@ -22,7 +22,7 @@ foreach ( array( 'kn_topic', 'kn_institution_type' ) as $taxonomy ) {
 }
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}kn_subscribers" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}kn_mail_jobs" );
-foreach ( array( 'kn_mail_settings', 'kn_seed_installed', 'kn_terms_seeded', 'kn_version', 'kn_last_queue_run', 'kn_mail_errors', 'kn_newsletter_page', 'kn_delete_on_uninstall', 'kn_topic_children', 'kn_institution_type_children' ) as $option ) delete_option( $option );
+foreach ( array( 'kn_mail_settings', 'kn_seed_installed', 'kn_terms_seeded', 'kn_version', 'kn_last_queue_run', 'kn_mail_errors', 'kn_newsletter_page', 'kn_delete_on_uninstall', 'kn_topic_children', 'kn_institution_type_children', 'kn_banner_default', 'kn_addresses_split' ) as $option ) delete_option( $option );
 $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'kn\\_list\\_lock\\_%' OR option_name LIKE '\\_transient\\_kn\\_%' OR option_name LIKE '\\_transient\\_timeout\\_kn\\_%'" );
 delete_metadata( 'user', 0, '_kn_institution_id', '', true );
 wp_clear_scheduled_hook( 'kn_mail_tick' );

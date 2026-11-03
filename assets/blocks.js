@@ -5,18 +5,24 @@
   var el = element.createElement;
   var data = window.knBlocks || { institutions: [] };
   var defs = [
-    { name: 'events', title: 'konstanth: Termine', icon: 'calendar-alt', description: 'Termine mit Filtern, Liste und Monatskalender.', layout: 'list' },
+    { name: 'events', title: 'konstanth: Veranstaltungen', icon: 'calendar-alt', description: 'Veranstaltungen mit Filtern, Liste und Monatskalender.', layout: 'list' },
     { name: 'jobs', title: 'konstanth: Stellen', icon: 'id-alt', description: 'Offene Stellen der Einrichtungen.', layout: 'grid' },
     { name: 'institutions', title: 'konstanth: Einrichtungen', icon: 'groups', description: 'Verzeichnis der Einrichtungen.', layout: 'grid' },
     { name: 'news', title: 'konstanth: Nachrichten', icon: 'megaphone', description: 'Nachrichten der Einrichtungen.', layout: 'grid' },
     { name: 'donations', title: 'konstanth: Fördern', icon: 'heart', description: 'Förder- und Spendenangaben der Einrichtungen.', layout: 'grid' },
+    { name: 'upcoming', title: 'konstanth: Aktuelle Veranstaltungen', icon: 'calendar', description: 'Die nächsten Veranstaltungen nebeneinander, etwa für die Startseite, mit Knopf zu allen Veranstaltungen.', upcoming: true },
     { name: 'newsletter', title: 'konstanth: Rundmail-Anmeldung', icon: 'email-alt', description: 'Anmeldung zu Themen und Einrichtungen mit Bestätigung per E-Mail.', newsletter: true }
   ];
   var institutions = [{ label: 'Alle Einrichtungen', value: 0 }].concat((data.institutions || []).map(function (item) { return { label: item.title, value: item.id }; }));
 
   defs.forEach(function (def) {
     var attributes = { institution: { type: 'number', default: 0 } };
-    if (!def.newsletter) {
+    if (def.upcoming) {
+      attributes.limit = { type: 'number', default: 3 };
+      attributes.heading = { type: 'string', default: 'Unsere aktuellen Veranstaltungen' };
+      attributes.button = { type: 'string', default: 'Alle Veranstaltungen' };
+      attributes.link = { type: 'string', default: '' };
+    } else if (!def.newsletter) {
       attributes.limit = { type: 'number', default: 12 };
       attributes.layout = { type: 'string', default: def.layout };
       attributes.heading = { type: 'string', default: '' };
@@ -34,7 +40,14 @@
         var controls = [
           el(components.SelectControl, { key: 'institution', label: 'Einrichtung', value: a.institution, options: institutions, onChange: function (v) { set({ institution: parseInt(v, 10) || 0 }); } })
         ];
-        if (!def.newsletter) {
+        if (def.upcoming) {
+          controls.push(
+            el(components.RangeControl, { key: 'limit', label: 'Anzahl Veranstaltungen', min: 1, max: 12, value: a.limit, onChange: function (v) { set({ limit: v || 3 }); } }),
+            el(components.TextControl, { key: 'heading', label: 'Überschrift (leer = keine)', value: a.heading, onChange: function (v) { set({ heading: v }); } }),
+            el(components.TextControl, { key: 'button', label: 'Text des Knopfs (leer = kein Knopf)', value: a.button, onChange: function (v) { set({ button: v }); } }),
+            el(components.TextControl, { key: 'link', label: 'Ziel des Knopfs', help: 'Leer lassen: automatisch die Seite mit der Veranstaltungsliste. Sonst z. B. /veranstaltungen/', value: a.link, onChange: function (v) { set({ link: v }); } })
+          );
+        } else if (!def.newsletter) {
           controls.push(
             el(components.RangeControl, { key: 'limit', label: 'Einträge pro Seite', min: 1, max: 100, value: a.limit, onChange: function (v) { set({ limit: v || 12 }); } }),
             el(components.SelectControl, { key: 'layout', label: 'Anordnung', value: a.layout, options: [{ label: 'Liste', value: 'list' }, { label: 'Raster', value: 'grid' }], onChange: function (v) { set({ layout: v }); } }),

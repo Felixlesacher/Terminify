@@ -1,6 +1,6 @@
-# konstanth – Einrichtungen, Termine & Rundmails
+# konstanth – Einrichtungen, Veranstaltungen & Rundmails
 
-WordPress-Plugin für die Zusammenarbeit anthroposophischer Einrichtungen: Termine, Stellen, Einrichtungen und Nachrichten als Gutenberg-Blöcke und Shortcodes, mit Zugängen für Einrichtungen, Kategorien mit eigenen Farben und optionalen Rundmails über Brevo. Oberfläche und öffentliche Texte sind auf Deutsch.
+WordPress-Plugin für die Zusammenarbeit anthroposophischer Einrichtungen: Veranstaltungen, Stellen, Einrichtungen und Nachrichten als Gutenberg-Blöcke und Shortcodes, mit Zugängen für Einrichtungen, Kategorien mit eigenen Farben und optionalen Rundmails über Brevo. Oberfläche und öffentliche Texte sind auf Deutsch.
 
 ## Installation
 
