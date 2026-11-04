@@ -4,7 +4,7 @@ Tags: events, institutions, newsletter, brevo, blocks
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -109,6 +109,10 @@ No. After activation the plugin is in test mode and sends no emails. Live sendin
 Not in this version. Use "Duplicate event" to copy an event as a draft and adjust the date.
 
 == Changelog ==
+
+= 1.3.1 =
+* Changed: every konstanth button has round corners (10 px), now also on event pages ("Zur Anmeldung", "In den Kalender", "Flyer herunterladen", "Alle Veranstaltungen") and the button of the "Aktuelle Veranstaltungen" block. The preview in the editors matches.
+* Fixed: in German, the date in the "Aktuelle Veranstaltungen" block showed a double full stop after the weekday ("Sa.., 7. November").
 
 = 1.3.0 =
 * New: "Aktuelle Veranstaltungen" block and shortcode [konstanth_aktuelle_veranstaltungen] for the home page: the next events side by side, with a theme-styled button to all events. Past and cancelled events are left out.

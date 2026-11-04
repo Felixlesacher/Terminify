@@ -255,10 +255,12 @@
   .kn-portal .kn-card:hover { transform: none; }
 }
 
-/* Aktuelle Veranstaltungen (z. B. Startseite): Überschrift und Knopf kommen im Stil des Themes, darunter die nächsten Veranstaltungen nebeneinander */
+/* Aktuelle Veranstaltungen (z. B. Startseite): Überschrift und Knopf kommen im Stil des Themes, der Knopf mit denselben runden Ecken wie alle
+   konstanth-Knöpfe; darunter die nächsten Veranstaltungen nebeneinander */
 .kn-upcoming { margin-block: 0 2rem; }
 .kn-upcoming-head { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; justify-content: space-between; margin-bottom: 1.25rem; }
 .kn-upcoming-head .kn-upcoming-title, .kn-upcoming-head .kn-upcoming-more { margin: 0; }
+.kn-upcoming .kn-upcoming-more .wp-block-button__link { border-radius: 10px; }
 .kn-portal.kn-upcoming-cards { background: transparent; border-radius: 0; margin: 0; padding: 0; }
 .kn-portal .kn-upcoming-grid { display: grid; gap: var(--kn-gap); grid-template-columns: minmax(0, 1fr); }
 @container kn (min-width: 42rem) { .kn-portal .kn-upcoming-grid { grid-template-columns: repeat(var(--kn-upcoming-cols, 3), minmax(0, 1fr)); } }
@@ -302,13 +304,13 @@
 }
 .kn-portal .kn-event-image { margin: 0; }
 .kn-portal .kn-event-image img { display: block; height: auto; width: 100%; }
-.kn-portal .kn-event-flyer, .kn-portal .kn-event-all { background: #fff; color: var(--kn-event-accent); display: inline-block; font-size: .8125rem; font-weight: 700; letter-spacing: .09em; padding: .85rem 1.4rem; text-decoration: none; text-transform: uppercase; }
+.kn-portal .kn-event-flyer, .kn-portal .kn-event-all { background: #fff; border-radius: var(--kn-radius-field); color: var(--kn-event-accent); display: inline-block; font-size: .8125rem; font-weight: 700; letter-spacing: .09em; padding: .85rem 1.4rem; text-decoration: none; text-transform: uppercase; }
 .kn-portal .kn-event-flyer { display: block; margin-top: .9rem; text-align: center; }
 .kn-portal .kn-event-flyer .kn-flyer-meta { font-weight: 600; letter-spacing: .02em; text-transform: none; }
 .kn-portal :is(.kn-event-flyer, .kn-event-all):hover { text-decoration: underline; text-underline-offset: .25em; }
 .kn-portal .kn-event-main { display: grid; gap: 1.25rem; align-content: start; }
 .kn-portal .kn-event-main .kn-facts { border-top: 1px solid rgba(0, 0, 0, .1); padding-top: 1.25rem; }
-.kn-portal.kn-event-page .kn-button { border-radius: 0; font-size: .8125rem; letter-spacing: .07em; text-transform: uppercase; }
+.kn-portal.kn-event-page .kn-button { font-size: .8125rem; letter-spacing: .07em; text-transform: uppercase; }
 .kn-portal .kn-event-footer { display: flex; justify-content: flex-end; padding: 1.5rem clamp(.75rem, 4%, 3rem) 2.5rem; }
 
 /* Klassische Themes (z. B. Kadence) zeigen den Titel über dem Inhalt; auf der Veranstaltungsseite trägt ihn die Karte. */

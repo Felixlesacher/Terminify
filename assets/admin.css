@@ -77,10 +77,11 @@ body.kn-focus .kn-focus-preview:not([hidden]){display:block;position:fixed;top:8
 .kn-pv-when{margin:0 0 6px;font-size:12.5px}.kn-pv-title{margin:0;font-size:22px;line-height:1.2;overflow-wrap:break-word}
 .kn-pv-body{display:grid;grid-template-columns:150px 1fr;gap:20px;padding:22px}
 .kn-pv-aside img{display:block;width:100%;height:auto}.kn-pv-aside img[hidden]{display:none}
-.kn-pv-flyer,.kn-pv-foot span{display:inline-block;background:#fff;color:#80621b;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:8px 12px}
+/* Knöpfe der Vorschau: 6 px in der verkleinerten Vorschau entsprechen den 10 px auf der Website */
+.kn-pv-flyer,.kn-pv-foot span{display:inline-block;background:#fff;border-radius:6px;color:#80621b;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:8px 12px}
 .kn-pv-flyer{display:block;margin-top:8px;text-align:center}.kn-pv-flyer[hidden]{display:none}
 .kn-pv-text p{margin:0 0 10px;font-size:13px;line-height:1.55}.kn-pv-place{color:#6b6155}
-.kn-pv-button{display:inline-block;border:1px solid #80621b;color:#80621b;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:7px 11px}
+.kn-pv-button{display:inline-block;border:1px solid #80621b;border-radius:6px;color:#80621b;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:7px 11px}
 .kn-pv-button[hidden]{display:none}
 .kn-pv-foot{display:flex;justify-content:flex-end;padding:0 22px 22px}
 /* Vorschau für Institution, Stelle und Nachricht: ein Block ohne Kopfbild */

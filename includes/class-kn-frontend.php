@@ -347,7 +347,7 @@ class KN_Frontend {
         if (self::public_org($owner)) { $meta[] = get_the_title($owner); }
         $location = KN_Core::place($post->ID)['short']; if ($location !== '') { $meta[] = $location; }
         $html = '<article class="kn-card kn-upcoming-card"' . $this->term_attr($post) . '><a class="kn-upcoming-media' . ($image ? '' : ' kn-upcoming-placeholder') . '" href="' . esc_url($url) . '" tabindex="-1" aria-hidden="true">' . $media . '</a>';
-        $html .= '<div class="kn-card-body"><p class="kn-upcoming-date"><time datetime="' . esc_attr(wp_date('c', $start)) . '"><strong>' . esc_html(wp_date('D., j. F', $start)) . '</strong> · ' . esc_html(wp_date('H:i', $start)) . ' Uhr</time></p>' . $this->badges($post);
+        $html .= '<div class="kn-card-body"><p class="kn-upcoming-date"><time datetime="' . esc_attr(wp_date('c', $start)) . '"><strong>' . esc_html(rtrim(wp_date('D', $start), '.') . '., ' . wp_date('j. F', $start)) . '</strong> · ' . esc_html(wp_date('H:i', $start)) . ' Uhr</time></p>' . $this->badges($post);
         $html .= '<h3><a href="' . esc_url($url) . '">' . esc_html(get_the_title($post)) . '</a></h3>' . ($meta ? '<p class="kn-card-meta">' . esc_html(implode(' · ', $meta)) . '</p>' : '');
         return $html . '<a class="kn-text-link" href="' . esc_url($url) . '">Zur Veranstaltung <span aria-hidden="true">→</span></a></div></article>';
     }
