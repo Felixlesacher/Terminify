@@ -292,18 +292,24 @@
 /* Height follows the column width (about 3:1) without widening the box on narrow screens. */
 .kn-portal .kn-event-banner { background: var(--kn-event-cream); height: clamp(11rem, 33.3cqi, 34rem); overflow: hidden; width: 100%; }
 .kn-portal .kn-event-banner img { display: block; height: 100%; object-fit: cover; width: 100%; }
-.kn-portal .kn-event-panel { background: #fff; margin: 0 clamp(.75rem, 4%, 3rem); padding: clamp(1rem, 4cqi, 1.75rem) clamp(1rem, 4.5cqi, 2.75rem); position: relative; }
+.kn-portal .kn-event-panel { background: #fff; border-radius: var(--kn-radius-field); margin: 0 clamp(.75rem, 4%, 3rem); padding: clamp(1rem, 4cqi, 1.75rem) clamp(1rem, 4.5cqi, 2.75rem); position: relative; }
 .kn-portal .kn-has-banner .kn-event-panel { margin-top: clamp(-6rem, -9cqi, -2rem); }
 .kn-portal.kn-portal .kn-event-when { font-size: 1rem; margin: 0 0 .6rem; }
 .kn-portal.kn-portal .kn-event-title { color: var(--kn-event-ink); font-size: clamp(1.55rem, 1.1rem + 2.4cqi, 2.5rem); font-weight: 400; hyphens: auto; letter-spacing: -.005em; line-height: 1.2; margin: 0 0 .85rem; overflow-wrap: break-word; text-transform: none; }
 .kn-portal .kn-event-panel .kn-badges { margin-top: .1rem; }
 .kn-portal .kn-event-body { display: grid; gap: 1.75rem 3.25rem; padding: clamp(1.5rem, 5cqi, 3.25rem) clamp(.75rem, 4%, 3rem) 1rem; }
 @container kn (min-width: 46rem) {
-  .kn-portal .kn-event-body { grid-template-columns: minmax(0, 18.5rem) minmax(0, 1fr); }
+  .kn-portal .kn-event-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .kn-portal .kn-event-single { grid-template-columns: minmax(0, 48rem); }
 }
 .kn-portal .kn-event-image { margin: 0; }
-.kn-portal .kn-event-image img { display: block; height: auto; width: 100%; }
+.kn-portal .kn-event-image img { border-radius: var(--kn-radius-field); display: block; height: auto; width: 100%; }
+/* Flyer: ein PDF im Betrachter des Browsers im Hochformat A4, ein Bild in voller Breite; der Download-Knopf steht darunter. */
+.kn-portal .kn-event-flyer-view { background: #fff; border-radius: var(--kn-radius-field); display: block; margin: 0; overflow: hidden; width: 100%; }
+.kn-portal .kn-event-image + .kn-event-flyer-view { margin-top: 1rem; }
+.kn-portal .kn-event-flyer-pdf { aspect-ratio: 1 / 1.414; border: 0; height: auto; }
+.kn-portal .kn-event-flyer-pdf[hidden] { display: none; }
+.kn-portal .kn-event-flyer-view img { display: block; height: auto; width: 100%; }
 .kn-portal .kn-event-flyer, .kn-portal .kn-event-all { background: #fff; border-radius: var(--kn-radius-field); color: var(--kn-event-accent); display: inline-block; font-size: .8125rem; font-weight: 700; letter-spacing: .09em; padding: .85rem 1.4rem; text-decoration: none; text-transform: uppercase; }
 .kn-portal .kn-event-flyer { display: block; margin-top: .9rem; text-align: center; }
 .kn-portal .kn-event-flyer .kn-flyer-meta { font-weight: 600; letter-spacing: .02em; text-transform: none; }

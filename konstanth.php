@@ -2,7 +2,7 @@
 /**
  * Plugin Name: konstanth – Einrichtungen, Veranstaltungen & Rundmails
  * Description: Veranstaltungen, Stellen, Einrichtungen und Nachrichten als Gutenberg-Blöcke und Shortcodes für deine eigenen Seiten. Mit Institutionszugängen, Kategorien und Farben und optionaler Brevo-Rundmail.
- * Version: 1.3.1
+ * Version: 1.3.2
  * Requires at least: 6.6
  * Requires PHP: 8.0
  * Author: konstanth
@@ -13,7 +13,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'KN_VERSION', '1.3.1' );
+define( 'KN_VERSION', '1.3.2' );
 define( 'KN_FILE', __FILE__ );
 define( 'KN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'KN_URL', plugin_dir_url( __FILE__ ) );

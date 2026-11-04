@@ -67,7 +67,7 @@ class KN_Guide {
 <li><strong>Rundmail:</strong> <em>Keine</em>, <em>Sofort</em> oder <em>Nach 24 h</em> wählen (siehe <a href="#kn-rundmail">Rundmail</a>).</li>
 <li><strong>Speichern:</strong> erst <em>Entwurf sichern</em> und die Vorschau ansehen, dann <em>Veröffentlichen</em>.</li>
 </ol>
-<p><strong>So sieht die Veranstaltungsseite aus:</strong> Oben das Kopfbild mit einer Karte für Datum und Titel. Darunter links das Bild und der Knopf „Flyer herunterladen“, rechts die Beschreibung mit Ort, Eintritt, Veranstalter und den Knöpfen „Zur Anmeldung“ und „In den Kalender“. Ganz unten führt „Alle Veranstaltungen“ zurück zur Liste. „In den Kalender“ lädt eine Kalenderdatei; Handys öffnen sie direkt im Kalender, am Computer reicht ein Klick auf die Datei.</p>
+<p><strong>So sieht die Veranstaltungsseite aus:</strong> Oben das Kopfbild mit einer Karte für Datum und Titel. Darunter links das Bild und der Flyer mit dem Knopf „Flyer herunterladen“, rechts die Beschreibung mit Ort, Eintritt, Veranstalter und den Knöpfen „Zur Anmeldung“ und „In den Kalender“. Ganz unten führt „Alle Veranstaltungen“ zurück zur Liste. „In den Kalender“ lädt eine Kalenderdatei; Handys öffnen sie direkt im Kalender, am Computer reicht ein Klick auf die Datei.</p>
 <p class="kn-guide-tip">Ohne Beginn, Ende, Themen und zugeordnete Einrichtung lässt sich nichts veröffentlichen. Fehlt etwas, bleibt der Eintrag ein Entwurf und oben steht, was fehlt.</p>
 </section>
 
@@ -85,7 +85,7 @@ class KN_Guide {
 <ul class="kn-guide-list">
 <li><strong>Logo:</strong> Es wird klein und rund angezeigt. Lass rund um das Motiv etwas Rand, sonst werden Ecken abgeschnitten.</li>
 <li><strong>Kopfbild:</strong> Wichtiges in die Mitte setzen; je nach Bildschirm werden oben und unten oder links und rechts etwas abgeschnitten. Ohne eigenes Kopfbild erscheint das Standardbild der Plattform.</li>
-<li><strong>Flyer:</strong> Er erscheint genau so, wie du ihn hochlädst, als Knopf „Flyer herunterladen“. Entfernen: im Feld auf <em>Entfernen</em> klicken und speichern.</li>
+<li><strong>Flyer:</strong> Er erscheint auf der Veranstaltungsseite neben der Beschreibung: ein PDF im PDF-Betrachter des Browsers, ein Bild als Bild. Darunter steht der Knopf „Flyer herunterladen“ mit der Datei genau so, wie du sie hochlädst. Handys ohne PDF-Betrachter zeigen nur den Knopf. Entfernen: im Feld auf <em>Entfernen</em> klicken und speichern.</li>
 <li><strong>Bild in der Rundmail:</strong> Das Bild der Veranstaltung, Stelle oder Nachricht steht auch in der Mail. WebP-Bilder wandelt konstanth dafür selbst um.</li>
 <li>Verwende nur eigene Bilder oder Bilder, die du verwenden darfst.</li>
 </ul>

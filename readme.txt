@@ -4,7 +4,7 @@ Tags: events, institutions, newsletter, brevo, blocks
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -109,6 +109,11 @@ No. After activation the plugin is in test mode and sends no emails. Live sendin
 Not in this version. Use "Duplicate event" to copy an event as a draft and adjust the date.
 
 == Changelog ==
+
+= 1.3.2 =
+* Changed: event pages show the flyer next to the description, each taking half the width on larger screens: a PDF in the browser's own PDF viewer, a picture as picture. "Flyer herunterladen" stays below it. Browsers without a PDF viewer show only the button.
+* Changed: the card with date and title, the event picture and the flyer on event pages have round corners (10 px).
+* Fixed: a single upcoming event in the "Aktuelle Veranstaltungen" block no longer fills the whole row; the cards keep the width set by the number of events to show (one in three by default).
 
 = 1.3.1 =
 * Changed: every konstanth button has round corners (10 px), now also on event pages ("Zur Anmeldung", "In den Kalender", "Flyer herunterladen", "Alle Veranstaltungen") and the button of the "Aktuelle Veranstaltungen" block. The preview in the editors matches.

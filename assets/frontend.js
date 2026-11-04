@@ -75,7 +75,9 @@
       if ((details.closest('.kn-portal')?.clientWidth || 0) >= 576) details.open = true;
     }), 150);
   });
-  const start = () => { initialize(); syncChips(); summarize(); };
+  // Browsers that do not report a PDF viewer (some phones, in-app browsers) would show an empty frame; there the download below is enough.
+  const hidePdfFrames = () => { if (navigator.pdfViewerEnabled !== true) document.querySelectorAll('.kn-portal .kn-event-flyer-pdf').forEach((frame) => { frame.hidden = true; }); };
+  const start = () => { initialize(); syncChips(); summarize(); hidePdfFrames(); };
   document.addEventListener('change', (event) => { if (event.target.closest('.kn-portal .kn-filter-details')) summarize(); });
   document.addEventListener('click', (event) => { if (event.target.closest('.kn-portal [data-kn-check]')) { syncChips(); summarize(); } });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

@@ -332,7 +332,8 @@ class KN_Frontend {
         $html .= self::portal('kn-upcoming-cards');
         if (!$posts) { $html .= '<p class="kn-upcoming-empty">Zurzeit sind keine Veranstaltungen geplant.</p>'; }
         else {
-            $html .= '<div class="kn-upcoming-grid" style="--kn-upcoming-cols:' . (int) min(3, count($posts)) . '">';
+            // Columns follow the chosen number, not the events found: a single event keeps the width of one card in three.
+            $html .= '<div class="kn-upcoming-grid" style="--kn-upcoming-cols:' . (int) min(3, $limit) . '">';
             foreach ($posts as $post) { $html .= $this->upcoming_card($post); }
             $html .= '</div>';
         }
@@ -470,8 +471,8 @@ class KN_Frontend {
         if ($image || $flyer) {
             $html .= '<div class="kn-event-aside">';
             if ($image) { $this->own_image = true; $html .= '<figure class="kn-event-image">' . get_the_post_thumbnail($post, 'large', array('loading' => 'eager')) . '</figure>'; $this->own_image = false; }
-            // The flyer is offered as the institution uploaded it.
-            if ($flyer) { $html .= '<a class="kn-event-flyer kn-flyer" href="' . esc_url($flyer['url']) . '" download>Flyer herunterladen <span class="kn-flyer-meta">(' . esc_html($flyer['type'] . ($flyer['size'] ? ', ' . size_format($flyer['size'], 1) : '')) . ')</span></a>'; }
+            // The flyer is shown on the page and offered below as the institution uploaded it.
+            if ($flyer) { $html .= $this->flyer_view($flyer, $post) . '<a class="kn-event-flyer kn-flyer" href="' . esc_url($flyer['url']) . '" download>Flyer herunterladen <span class="kn-flyer-meta">(' . esc_html($flyer['type'] . ($flyer['size'] ? ', ' . size_format($flyer['size'], 1) : '')) . ')</span></a>'; }
             $html .= '</div>';
         }
         $html .= '<div class="kn-event-main">';
@@ -551,6 +552,18 @@ class KN_Frontend {
     }
 
     private function fact($label, $value) { return $value !== '' ? '<div><dt>' . esc_html($label) . '</dt><dd>' . nl2br(esc_html($value)) . '</dd></div>' : ''; }
+
+    /** The flyer itself: a PDF in the browser's own viewer, a picture as picture. Other types keep only the download. */
+    private function flyer_view($flyer, $post) {
+        $label = 'Flyer: ' . get_the_title($post);
+        if ('PDF' === $flyer['type']) {
+            // Browsers without a PDF viewer (some phones) show nothing here; the download below always works.
+            return '<object class="kn-event-flyer-view kn-event-flyer-pdf" data="' . esc_url($flyer['url'] . '#toolbar=0&navpanes=0&view=FitH') . '" type="application/pdf" title="' . esc_attr($label) . '" aria-label="' . esc_attr($label) . '"></object>';
+        }
+        if (!in_array($flyer['type'], array('JPG', 'PNG', 'WEBP', 'GIF'), true)) { return ''; }
+        $image = wp_get_attachment_image((int) $flyer['id'], 'large', false, array('class' => 'kn-event-flyer-image', 'alt' => $label, 'loading' => 'lazy'));
+        return $image ? '<figure class="kn-event-flyer-view">' . $image . '</figure>' : '';
+    }
 
     private function contact($post) {
         $id = $post->ID; $email = get_post_meta($id, '_kn_email', true); $phone = get_post_meta($id, '_kn_phone', true); $address = $post->post_type === 'kn_institution' ? implode("\n", KN_Core::address_lines($id)) : ''; $website = $this->http_url(get_post_meta($id, '_kn_website', true));
