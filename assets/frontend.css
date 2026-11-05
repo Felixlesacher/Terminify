@@ -289,8 +289,8 @@
   padding: 0;
 }
 .kn-portal.kn-event-page > .kn-notice { margin: 0 0 1rem; }
-/* Height follows the column width (about 3:1) without widening the box on narrow screens. */
-.kn-portal .kn-event-banner { background: var(--kn-event-cream); height: clamp(11rem, 33.3cqi, 34rem); overflow: hidden; width: 100%; }
+/* Height follows the column width (about 3:1); the picture itself reaches from window edge to window edge. */
+.kn-portal .kn-event-banner { background: var(--kn-event-cream); height: clamp(11rem, 33.3cqi, 34rem); margin-inline: calc(50% - 50vw); overflow: hidden; width: auto; }
 .kn-portal .kn-event-banner img { display: block; height: 100%; object-fit: cover; width: 100%; }
 .kn-portal .kn-event-panel { background: #fff; border-radius: var(--kn-radius-field); margin: 0 clamp(.75rem, 4%, 3rem); padding: clamp(1rem, 4cqi, 1.75rem) clamp(1rem, 4.5cqi, 2.75rem); position: relative; }
 .kn-portal .kn-has-banner .kn-event-panel { margin-top: clamp(-6rem, -9cqi, -2rem); }
@@ -304,12 +304,12 @@
 }
 .kn-portal .kn-event-image { margin: 0; }
 .kn-portal .kn-event-image img { border-radius: var(--kn-radius-field); display: block; height: auto; width: 100%; }
-/* Flyer: ein PDF im Betrachter des Browsers im Hochformat A4, ein Bild in voller Breite; der Download-Knopf steht darunter. */
-.kn-portal .kn-event-flyer-view { background: #fff; border-radius: var(--kn-radius-field); display: block; margin: 0; overflow: hidden; width: 100%; }
+/* Flyer: genau wie hochgeladen, ohne Rahmen und ohne runde Ecken. Ein PDF zeichnet pdf.js als erste Seite in ihrem eigenen Format,
+   ein Bild steht in voller Breite; der Download-Knopf steht darunter. */
+.kn-portal .kn-event-flyer-view { display: block; margin: 0; width: 100%; }
 .kn-portal .kn-event-image + .kn-event-flyer-view { margin-top: 1rem; }
-.kn-portal .kn-event-flyer-pdf { aspect-ratio: 1 / 1.414; border: 0; height: auto; }
 .kn-portal .kn-event-flyer-pdf[hidden] { display: none; }
-.kn-portal .kn-event-flyer-view img { display: block; height: auto; width: 100%; }
+.kn-portal .kn-event-flyer-view img, .kn-portal .kn-event-flyer-view canvas { border-radius: 0; display: block; height: auto; width: 100%; }
 .kn-portal .kn-event-flyer, .kn-portal .kn-event-all { background: #fff; border-radius: var(--kn-radius-field); color: var(--kn-event-accent); display: inline-block; font-size: .8125rem; font-weight: 700; letter-spacing: .09em; padding: .85rem 1.4rem; text-decoration: none; text-transform: uppercase; }
 .kn-portal .kn-event-flyer { display: block; margin-top: .9rem; text-align: center; }
 .kn-portal .kn-event-flyer .kn-flyer-meta { font-weight: 600; letter-spacing: .02em; text-transform: none; }
@@ -321,3 +321,10 @@
 
 /* Klassische Themes (z. B. Kadence) zeigen den Titel über dem Inhalt; auf der Veranstaltungsseite trägt ihn die Karte. */
 body.kn-event-page-active :is(.entry-hero[class*="kn_event-hero"], .entry-header.kn_event-title, .kn_event .entry-header > .entry-title) { display: none; }
+/* Das fensterbreite Kopfbild reicht unter einen senkrechten Scrollbalken; abgeschnitten entsteht kein waagerechter. */
+body.kn-event-has-banner { overflow-x: clip; }
+/* Kadence: Mit Kopfbild entfällt der Abstand zwischen Kopfzeile und Inhalt, das Bild schließt direkt an
+   (auch gegen Kadences genauere Regel für Inhalt nach einem Beitragsbild). */
+body.kn-event-has-banner .content-area { margin-top: 0; }
+body.kn-event-has-banner .entry-content-wrap :is(.single-content, .post-thumbnail + .single-content) { margin-top: 0; }
+body.kn-event-has-banner .entry:not(.loop-entry) > .entry-content-wrap { padding-top: 0; }

@@ -4,7 +4,7 @@ Tags: events, institutions, newsletter, brevo, blocks
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -88,6 +88,15 @@ Data sent to GitHub: the request itself, with the server's IP address, the plugi
 * GitHub terms of service: https://docs.github.com/site-policy/github-terms/github-terms-of-service
 * GitHub privacy statement: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement
 
+PDF flyers on event pages are drawn with pdf.js, which comes with the plugin (assets/vendor/pdfjs). Visitors' browsers load it from the website itself; no other server is contacted.
+
+== Bundled components ==
+
+* Plugin Update Checker 5.7 by Jānis Elsts (MIT license), lib/plugin-update-checker.
+* pdf.js 6.4.299 by Mozilla (Apache License 2.0) with its decoders for JPEG 2000 (OpenJPEG, BSD), JBIG2 (PDFium, BSD) and ICC colour profiles (qcms, MIT) and a CMYK profile (CC0), assets/vendor/pdfjs. Licences and origin are in that folder (LICENSE, wasm/LICENSE_*, iccs/LICENSE, HERKUNFT.md).
+
+The plugin's own code is licensed GPLv2 or later. The Apache License 2.0 is compatible with GPL version 3, so the plugin together with pdf.js is distributed under GPLv3 or later.
+
 == Data retention ==
 
 * Deactivating the plugin keeps all data and stops sending.
@@ -109,6 +118,11 @@ No. After activation the plugin is in test mode and sends no emails. Live sendin
 Not in this version. Use "Duplicate event" to copy an event as a draft and adjust the date.
 
 == Changelog ==
+
+= 1.3.3 =
+* Changed: a PDF flyer on event pages now appears exactly as uploaded: its first page in its own format (A4 or any other size), without viewer frame, dark margins or round corners, also on phones. Picture flyers have no round corners either. "Flyer herunterladen" stays below and offers the whole file. Without JavaScript, or if the PDF cannot be read, only the button is shown.
+* Changed: the banner of an event page reaches from window edge to window edge and sits directly below the site header (in Kadence without the theme's space above the content).
+* Bundles pdf.js 6.4.299 by Mozilla (Apache License 2.0) to draw PDF flyers, with its decoders for JPEG 2000 (OpenJPEG, BSD), JBIG2 (PDFium, BSD) and ICC colour profiles (qcms, MIT) and a CMYK profile (CC0). It is loaded only on event pages with a PDF flyer and from the website itself, never from another server.
 
 = 1.3.2 =
 * Changed: event pages show the flyer next to the description, each taking half the width on larger screens: a PDF in the browser's own PDF viewer, a picture as picture. "Flyer herunterladen" stays below it. Browsers without a PDF viewer show only the button.

@@ -85,7 +85,7 @@ class KN_Guide {
 <ul class="kn-guide-list">
 <li><strong>Logo:</strong> Es wird klein und rund angezeigt. Lass rund um das Motiv etwas Rand, sonst werden Ecken abgeschnitten.</li>
 <li><strong>Kopfbild:</strong> Wichtiges in die Mitte setzen; je nach Bildschirm werden oben und unten oder links und rechts etwas abgeschnitten. Ohne eigenes Kopfbild erscheint das Standardbild der Plattform.</li>
-<li><strong>Flyer:</strong> Er erscheint auf der Veranstaltungsseite neben der Beschreibung: ein PDF im PDF-Betrachter des Browsers, ein Bild als Bild. Darunter steht der Knopf „Flyer herunterladen“ mit der Datei genau so, wie du sie hochlädst. Handys ohne PDF-Betrachter zeigen nur den Knopf. Entfernen: im Feld auf <em>Entfernen</em> klicken und speichern.</li>
+<li><strong>Flyer:</strong> Er erscheint auf der Veranstaltungsseite neben der Beschreibung, genau wie hochgeladen und ohne Rahmen: bei einem PDF die erste Seite in ihrem eigenen Format (A4 oder jede andere Größe), ein Bild als Bild. Darunter steht der Knopf „Flyer herunterladen“ mit der ganzen Datei. Entfernen: im Feld auf <em>Entfernen</em> klicken und speichern.</li>
 <li><strong>Bild in der Rundmail:</strong> Das Bild der Veranstaltung, Stelle oder Nachricht steht auch in der Mail. WebP-Bilder wandelt konstanth dafür selbst um.</li>
 <li>Verwende nur eigene Bilder oder Bilder, die du verwenden darfst.</li>
 </ul>

@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) { exit; }
 
 class KN_Frontend {
     const PLACEHOLDER = '<!--kn-detail-->';
+    /** Version of the bundled pdf.js in assets/vendor/pdfjs (see HERKUNFT.md there); also the cache key of its two files. */
+    const PDFJS_VERSION = '6.4.299';
     private $instance = 0;
     private $detail = null;
     private static $colors_added = false;
@@ -25,8 +27,9 @@ class KN_Frontend {
         // Block themes print the featured image in their single template; the detail layout already shows it once.
         add_filter('post_thumbnail_html', array($this, 'single_image'), 10, 2);
         // The event page shows its title in the banner card; the theme's own title line is dropped there (block themes here, classic themes by a body class in the stylesheet).
+        // A second body class tells the stylesheet that a banner opens the page, so it can sit directly below the site header.
         add_filter('render_block_core/post-title', array($this, 'theme_title'), 10, 3);
-        add_filter('body_class', function ($classes) { if (is_singular('kn_event')) { $classes[] = 'kn-event-page-active'; } return $classes; });
+        add_filter('body_class', function ($classes) { if (is_singular('kn_event')) { $classes[] = 'kn-event-page-active'; if (KN_Core::banner(get_queried_object_id())) { $classes[] = 'kn-event-has-banner'; } } return $classes; });
         add_action('init', array($this, 'register_blocks'));
         add_filter('block_categories_all', function ($categories) { $categories[] = array('slug' => 'konstanth', 'title' => 'konstanth'); return $categories; });
         // The block editor shows the same styles as the website, including the category colours.
@@ -553,12 +556,14 @@ class KN_Frontend {
 
     private function fact($label, $value) { return $value !== '' ? '<div><dt>' . esc_html($label) . '</dt><dd>' . nl2br(esc_html($value)) . '</dd></div>' : ''; }
 
-    /** The flyer itself: a PDF in the browser's own viewer, a picture as picture. Other types keep only the download. */
+    /** The flyer itself: the first page of a PDF drawn at the file's own size, a picture as picture. Other types keep only the download. */
     private function flyer_view($flyer, $post) {
         $label = 'Flyer: ' . get_the_title($post);
         if ('PDF' === $flyer['type']) {
-            // Browsers without a PDF viewer (some phones) show nothing here; the download below always works.
-            return '<object class="kn-event-flyer-view kn-event-flyer-pdf" data="' . esc_url($flyer['url'] . '#toolbar=0&navpanes=0&view=FitH') . '" type="application/pdf" title="' . esc_attr($label) . '" aria-label="' . esc_attr($label) . '"></object>';
+            // pdf.js from the plugin draws the page without a viewer frame (assets/frontend.js). The box stays hidden until the page is drawn,
+            // so without JavaScript or with an unreadable file only the download below remains.
+            $lib = KN_URL . 'assets/vendor/pdfjs/';
+            return '<div class="kn-event-flyer-view kn-event-flyer-pdf" role="img" aria-label="' . esc_attr($label) . '" data-kn-pdf="' . esc_url($flyer['url']) . '" data-kn-pdf-lib="' . esc_url($lib . 'pdf.js?ver=' . self::PDFJS_VERSION) . '" data-kn-pdf-worker="' . esc_url($lib . 'pdf.worker.js?ver=' . self::PDFJS_VERSION) . '" hidden></div>';
         }
         if (!in_array($flyer['type'], array('JPG', 'PNG', 'WEBP', 'GIF'), true)) { return ''; }
         $image = wp_get_attachment_image((int) $flyer['id'], 'large', false, array('class' => 'kn-event-flyer-image', 'alt' => $label, 'loading' => 'lazy'));
