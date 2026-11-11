@@ -536,7 +536,7 @@ class KN_Mail {
         $html .= '<div><h2 class="kn-section-title">Neuigkeiten per E-Mail</h2><p class="kn-form-note">Die Anmeldung wird erst aktiv, wenn Sie den Link in der Bestätigungsmail anklicken.</p></div>';
         $html .= '<div><label class="kn-field-label" for="' . esc_attr($email_id) . '">E-Mail-Adresse</label><input id="' . esc_attr($email_id) . '" class="kn-input" type="email" name="email" maxlength="190" autocomplete="email" required></div>';
         if ($themes) {
-            $html .= '<fieldset class="kn-filter-group" data-kn-filter-group="topics"><legend>Veranstaltungen zu Themen – aus allen Einrichtungen</legend><div class="kn-check-list">';
+            $html .= '<fieldset class="kn-filter-group" data-kn-filter-group="topics"><legend>Veranstaltungen zu Themen, aus allen Einrichtungen</legend><div class="kn-check-list">';
             foreach ($themes as $term) { $html .= self::chip('topic_ids[]', (int)$term->term_id, $term->name, 'kn-term-' . (int)$term->term_id); }
             $html .= '</div></fieldset>';
         }

@@ -4,7 +4,7 @@ Tags: events, institutions, newsletter, brevo, blocks
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 1.3.3
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,6 +118,10 @@ No. After activation the plugin is in test mode and sends no emails. Live sendin
 Not in this version. Use "Duplicate event" to copy an event as a draft and adjust the date.
 
 == Changelog ==
+
+= 1.4.0 =
+* New: a search bar above the lists of jobs, institutions and donations ("Stellen suchen", "Einrichtungen suchen", "Einrichtung suchen"). It finds title and text, the place, the institution and its category, so "Gesundheit" also finds the jobs of health institutions; every word must appear somewhere. Results are counted, "Suche zurücksetzen" clears the search, and paging keeps it. Works without JavaScript; search pages are not indexed. On by default, also on existing pages; the blocks have a switch "Suchleiste anzeigen", the shortcodes take search="0".
+* Changed: the preview notice and a newsletter heading no longer use a dash.
 
 = 1.3.3 =
 * Changed: a PDF flyer on event pages now appears exactly as uploaded: its first page in its own format (A4 or any other size), without viewer frame, dark margins or round corners, also on phones. Picture flyers have no round corners either. "Flyer herunterladen" stays below and offers the whole file. Without JavaScript, or if the PDF cannot be read, only the button is shown.

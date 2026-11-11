@@ -120,6 +120,12 @@
 /* Ergebnisse */
 .kn-portal .kn-results-toolbar { align-items: center; display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; margin-bottom: 1rem; }
 .kn-portal .kn-result-count { color: var(--kn-muted); font-size: .9375rem; font-variant-numeric: tabular-nums; }
+/* Suchleiste über Stellen, Einrichtungen und Fördermöglichkeiten: Feld und Knopf in einer Zeile, auch am Handy; nur sehr schmal untereinander. */
+.kn-portal .kn-search-form { margin: 0 0 1.25rem; max-width: 40rem; }
+.kn-portal .kn-search-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+.kn-portal .kn-search-row .kn-search { flex: 1 1 9rem; min-width: 0; width: auto; }
+.kn-portal .kn-search-row .kn-button { flex: 0 0 auto; }
+.kn-portal .kn-search-summary { margin: 0 0 1rem; }
 .kn-portal .kn-view-switch { display: flex; gap: .25rem; }
 .kn-portal .kn-view-switch a { align-items: center; border-radius: var(--kn-radius-field); color: var(--kn-ink); display: inline-flex; font-size: .9375rem; min-height: 40px; padding: .45rem .8rem; text-decoration: none; }
 .kn-portal .kn-view-switch a[aria-current] { background: var(--kn-soft); font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .3em; }

@@ -86,8 +86,10 @@ class KN_Frontend {
     }
 
     private function attributes($atts, $default_layout = 'grid') {
-        $atts = shortcode_atts(array('institution' => 0, 'limit' => 12, 'layout' => $default_layout, 'heading' => ''), $atts);
-        return array('institution' => absint($atts['institution']), 'limit' => max(1, min(100, absint($atts['limit']))), 'layout' => $atts['layout'] === 'list' ? 'list' : 'grid', 'heading' => sanitize_text_field($atts['heading']));
+        $atts = shortcode_atts(array('institution' => 0, 'limit' => 12, 'layout' => $default_layout, 'heading' => '', 'search' => '1'), $atts);
+        // The search bar of jobs, institutions and donations is on unless a page switches it off (search="0" or the block setting).
+        $search = !in_array(strtolower(trim((string) $atts['search'])), array('0', 'false', 'no', 'off', 'nein', 'aus'), true);
+        return array('institution' => absint($atts['institution']), 'limit' => max(1, min(100, absint($atts['limit']))), 'layout' => $atts['layout'] === 'list' ? 'list' : 'grid', 'heading' => sanitize_text_field($atts['heading']), 'search' => $search);
     }
 
     /** Dynamic blocks share the shortcode renderers; the editor preview uses the same server output. */
@@ -101,8 +103,9 @@ class KN_Frontend {
         $list = array('institution' => array('type' => 'number', 'default' => 0), 'limit' => array('type' => 'number', 'default' => 12), 'layout' => array('type' => 'string', 'default' => 'grid'), 'heading' => array('type' => 'string', 'default' => ''));
         foreach (array('events' => 'events', 'jobs' => 'jobs', 'institutions' => 'institutions', 'news' => 'news', 'donations' => 'donations') as $name => $method) {
             $attributes = $list; if ($name === 'events') { $attributes['layout']['default'] = 'list'; }
+            if (in_array($name, array('jobs', 'institutions', 'donations'), true)) { $attributes['search'] = array('type' => 'boolean', 'default' => true); }
             register_block_type('konstanth/' . $name, array('api_version' => 3, 'editor_script' => 'kn-blocks', 'attributes' => $attributes, 'render_callback' => function ($a) use ($method) {
-                return $this->$method(array('institution' => absint($a['institution'] ?? 0), 'limit' => absint($a['limit'] ?? 12), 'layout' => ($a['layout'] ?? 'grid') === 'list' ? 'list' : 'grid', 'heading' => sanitize_text_field($a['heading'] ?? '')));
+                return $this->$method(array('institution' => absint($a['institution'] ?? 0), 'limit' => absint($a['limit'] ?? 12), 'layout' => ($a['layout'] ?? 'grid') === 'list' ? 'list' : 'grid', 'heading' => sanitize_text_field($a['heading'] ?? ''), 'search' => !isset($a['search']) || $a['search'] ? '1' : '0'));
             }));
         }
         register_block_type('konstanth/upcoming', array('api_version' => 3, 'editor_script' => 'kn-blocks', 'attributes' => array('institution' => array('type' => 'number', 'default' => 0), 'limit' => array('type' => 'number', 'default' => 3), 'heading' => array('type' => 'string', 'default' => 'Unsere aktuellen Veranstaltungen'), 'button' => array('type' => 'string', 'default' => 'Alle Veranstaltungen'), 'link' => array('type' => 'string', 'default' => '')), 'render_callback' => function ($a) {
@@ -384,21 +387,66 @@ class KN_Frontend {
     public function institutions($atts = array()) { return $this->listing('kn_institution', $atts); }
     public function donations($atts = array()) { return $this->listing('kn_donation', $atts); }
 
+    /** Words of the search bar per list: label, hint in the empty field, one and several results, no result. */
+    const SEARCH_WORDS = array(
+        'kn_job' => array('Stellen suchen', 'Beruf, Ort, Bereich oder Einrichtung', 'Stelle', 'Stellen', 'Keine passenden Stellen'),
+        'kn_institution' => array('Einrichtungen suchen', 'Name, Ort oder Bereich', 'Einrichtung', 'Einrichtungen', 'Keine passenden Einrichtungen'),
+        'kn_donation' => array('Einrichtung suchen', 'Name, Ort oder Bereich', 'Einrichtung', 'Einrichtungen', 'Keine passende Einrichtung'),
+    );
+
     private function listing($type, $atts) {
         $atts = $this->attributes($atts); $key = $this->key(); $input = $this->input($key); $page = isset($input['page']) ? max(1, absint($input['page'])) : 1;
         $donation = $type === 'kn_donation'; $institution = $type === 'kn_institution' || $donation;
+        $words = $atts['search'] ? (self::SEARCH_WORDS[$type] ?? null) : null;
+        $search = $words && isset($input['q']) && is_scalar($input['q']) ? trim(mb_substr(sanitize_text_field($input['q']), 0, 100)) : '';
         $args = array('post_type' => $institution ? 'kn_institution' : $type, 'post_status' => 'publish', 'has_password' => false, 'posts_per_page' => $atts['limit'], 'paged' => $page, 'orderby' => $institution ? 'title' : 'date', 'order' => $institution ? 'ASC' : 'DESC');
         if ($institution) { if ($atts['institution']) { $args['post__in'] = array($atts['institution']); } }
         else { $organizations = $this->organizations($atts['institution']); if (!$organizations) { $args['post__in'] = array(0); } else { $args['meta_query'] = array($this->organization_query($organizations)); } }
         if ($donation) { $args['meta_query'] = array('relation' => 'OR', array('key' => '_kn_donation', 'value' => '', 'compare' => '!='), array('key' => '_kn_donation_url', 'value' => '', 'compare' => '!=')); }
         if ($type === 'kn_job') { $args['meta_query'][] = array('relation' => 'OR', array('key' => '_kn_deadline', 'compare' => 'NOT EXISTS'), array('key' => '_kn_deadline', 'value' => '', 'compare' => '='), array('key' => '_kn_deadline', 'value' => wp_date('Y-m-d'), 'compare' => '>=', 'type' => 'DATE')); }
+        if ($search !== '') { $found = $this->search_ids($type, $search); $args['post__in'] = isset($args['post__in']) ? array_values(array_intersect(array_map('intval', $args['post__in']), $found)) : $found; if (!$args['post__in']) { $args['post__in'] = array(0); } }
         $query = new WP_Query($args); $html = $this->open($atts, 'kn-listing'); $cards = '';
+        if ($words) {
+            // A plain GET form: it works without JavaScript, and the address of a search can be shared.
+            $html .= '<form method="get" class="kn-search-form" role="search" action="' . esc_url(remove_query_arg($key)) . '">' . $this->route_fields($key) . '<label class="kn-field-label" for="' . esc_attr($key) . '-search">' . esc_html($words[0]) . '</label><div class="kn-search-row"><input id="' . esc_attr($key) . '-search" class="kn-search" type="search" name="' . esc_attr($key) . '[q]" value="' . esc_attr($search) . '" placeholder="' . esc_attr($words[1]) . '"><button class="kn-button" type="submit">Suchen</button></div></form>';
+            if ($search !== '') { $html .= '<p class="kn-result-count kn-search-summary" role="status">' . esc_html(number_format_i18n($query->found_posts) . ' ' . ($query->found_posts === 1 ? $words[2] : $words[3]) . ' für „' . $search . '“') . ' <a class="kn-reset" rel="nofollow" href="' . esc_url(remove_query_arg($key)) . '">Suche zurücksetzen</a></p>'; }
+        }
         foreach ($query->posts as $post) { if (self::public_post($post)) { $cards .= $institution ? $this->institution_card($post, $donation) : $this->content_card($post, $type); } }
-        if (!$cards) {
+        if (!$cards && $search !== '') { $html .= $this->empty_state($words[4], 'Versuchen Sie ein anderes Wort oder setzen Sie die Suche zurück.'); }
+        elseif (!$cards) {
             $labels = array('kn_job' => 'Noch keine offenen Stellen', 'kn_news' => 'Noch keine Nachrichten', 'kn_institution' => 'Noch keine Einrichtungen', 'kn_donation' => 'Noch keine Fördermöglichkeiten');
             $html .= $this->empty_state($labels[$type], 'Sobald Inhalte veröffentlicht sind, finden Sie sie an dieser Stelle.');
         } else { $html .= '<div class="kn-cards kn-layout-' . esc_attr($atts['layout']) . '">' . $cards . '</div>'; }
-        return $html . $this->pagination($query, $key, array(), $page) . '</section>';
+        return $html . $this->pagination($query, $key, $search !== '' ? array('q' => $search) : array(), $page) . '</section>';
+    }
+
+    /**
+     * Public entries in which every word of the search appears somewhere: in title or text, in the place, in the name,
+     * town or postcode of the institution or in its category (so "Gesundheit" finds the jobs of health institutions);
+     * for donations also in the donation text. Only published entries without password count, also for the institutions.
+     */
+    private function search_ids($type, $search) {
+        $words = array_values(array_unique(array_filter(preg_split('/\s+/u', mb_strtolower($search)), function ($word) { return mb_strlen($word) >= 2; })));
+        $words = array_slice($words ?: array(mb_strtolower($search)), 0, 5);
+        $base = array('post_status' => 'publish', 'has_password' => false, 'posts_per_page' => -1, 'fields' => 'ids', 'no_found_rows' => true, 'orderby' => 'ID');
+        $like = function ($keys, $word) { $query = array('relation' => 'OR'); foreach ($keys as $meta) { $query[] = array('key' => $meta, 'value' => $word, 'compare' => 'LIKE'); } return $query; };
+        $result = null;
+        foreach ($words as $word) {
+            $orgs = array_merge(get_posts($base + array('post_type' => 'kn_institution', 's' => $word)), get_posts($base + array('post_type' => 'kn_institution', 'meta_query' => $like(array('_kn_city', '_kn_zip', '_kn_region'), $word))));
+            $categories = get_terms(array('taxonomy' => 'kn_institution_type', 'hide_empty' => false, 'name__like' => $word, 'fields' => 'ids'));
+            if ($categories && !is_wp_error($categories)) { $orgs = array_merge($orgs, get_posts($base + array('post_type' => 'kn_institution', 'tax_query' => array(array('taxonomy' => 'kn_institution_type', 'terms' => array_map('intval', $categories)))))); }
+            if ($type === 'kn_job') {
+                $ids = array_merge(get_posts($base + array('post_type' => 'kn_job', 's' => $word)), get_posts($base + array('post_type' => 'kn_job', 'meta_query' => $like(array('_kn_location', '_kn_workload'), $word))));
+                if ($orgs) { $ids = array_merge($ids, get_posts($base + array('post_type' => 'kn_job', 'meta_query' => array(array('key' => '_kn_org', 'value' => array_map('intval', $orgs), 'compare' => 'IN', 'type' => 'NUMERIC'))))); }
+            } else {
+                $ids = $orgs;
+                if ($type === 'kn_donation') { $ids = array_merge($ids, get_posts($base + array('post_type' => 'kn_institution', 'meta_query' => $like(array('_kn_donation'), $word)))); }
+            }
+            $ids = array_unique(array_map('intval', $ids));
+            $result = $result === null ? $ids : array_intersect($result, $ids);
+            if (!$result) { break; }
+        }
+        return array_values($result ?: array());
     }
 
     private function content_card($post, $type) {
@@ -429,7 +477,7 @@ class KN_Frontend {
             return "\n" . self::PLACEHOLDER . "\n";
         }
         $html = $this->open(array(), 'kn-detail');
-        if (!$public) { $html .= '<p class="kn-notice" role="status">Vorschau – dieser Inhalt ist noch nicht öffentlich sichtbar.</p>'; }
+        if (!$public) { $html .= '<p class="kn-notice" role="status">Vorschau: Dieser Inhalt ist noch nicht öffentlich sichtbar.</p>'; }
         $taxonomy = $post->post_type === 'kn_institution' ? 'kn_institution_type' : 'kn_topic';
         $html .= '<article class="kn-detail"><div class="kn-detail-header"' . $this->term_attr($post, $taxonomy) . '>' . $this->badges($post, $taxonomy);
         if ($post->post_type !== 'kn_institution') { $html .= $this->owner_line($post); }
@@ -465,7 +513,7 @@ class KN_Frontend {
         $when = $end > $start && !$same_day ? wp_date('l, j. F Y · H:i', $start) . ' Uhr – ' . wp_date('l, j. F Y · H:i', $end) . ' Uhr' : wp_date('l, j. F Y', $start) . ' | ' . wp_date('H:i', $start) . ($same_day ? '–' . wp_date('H:i', $end) : '') . ' Uhr';
         $banner = KN_Core::banner($post->ID);
         $html = self::portal('kn-detail kn-event-page');
-        if (!$public) { $html .= '<p class="kn-notice" role="status">Vorschau – dieser Inhalt ist noch nicht öffentlich sichtbar.</p>'; }
+        if (!$public) { $html .= '<p class="kn-notice" role="status">Vorschau: Dieser Inhalt ist noch nicht öffentlich sichtbar.</p>'; }
         $html .= '<article class="kn-event"' . $this->term_attr($post) . '><header class="kn-event-hero' . ($banner ? ' kn-has-banner' : '') . '">';
         if ($banner) { $this->own_image = true; $html .= '<div class="kn-event-banner">' . wp_get_attachment_image($banner, 'full', false, array('class' => 'kn-event-banner-image', 'alt' => '', 'loading' => 'eager', 'sizes' => '100vw')) . '</div>'; $this->own_image = false; }
         $html .= '<div class="kn-event-panel"><p class="kn-event-when"><time datetime="' . esc_attr(wp_date('c', $start)) . '">' . esc_html($when) . '</time></p><h1 class="kn-event-title">' . esc_html(get_the_title($post)) . '</h1>' . $this->badges($post) . '</div></header>';

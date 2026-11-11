@@ -6,10 +6,10 @@
   var data = window.knBlocks || { institutions: [] };
   var defs = [
     { name: 'events', title: 'konstanth: Veranstaltungen', icon: 'calendar-alt', description: 'Veranstaltungen mit Filtern, Liste und Monatskalender.', layout: 'list' },
-    { name: 'jobs', title: 'konstanth: Stellen', icon: 'id-alt', description: 'Offene Stellen der Einrichtungen.', layout: 'grid' },
-    { name: 'institutions', title: 'konstanth: Einrichtungen', icon: 'groups', description: 'Verzeichnis der Einrichtungen.', layout: 'grid' },
+    { name: 'jobs', title: 'konstanth: Stellen', icon: 'id-alt', description: 'Offene Stellen der Einrichtungen, mit Suchleiste.', layout: 'grid', search: true },
+    { name: 'institutions', title: 'konstanth: Einrichtungen', icon: 'groups', description: 'Verzeichnis der Einrichtungen, mit Suchleiste.', layout: 'grid', search: true },
     { name: 'news', title: 'konstanth: Nachrichten', icon: 'megaphone', description: 'Nachrichten der Einrichtungen.', layout: 'grid' },
-    { name: 'donations', title: 'konstanth: Fördern', icon: 'heart', description: 'Förder- und Spendenangaben der Einrichtungen.', layout: 'grid' },
+    { name: 'donations', title: 'konstanth: Fördern', icon: 'heart', description: 'Förder- und Spendenangaben der Einrichtungen, mit Suchleiste.', layout: 'grid', search: true },
     { name: 'upcoming', title: 'konstanth: Aktuelle Veranstaltungen', icon: 'calendar', description: 'Die nächsten Veranstaltungen nebeneinander, etwa für die Startseite, mit Knopf zu allen Veranstaltungen.', upcoming: true },
     { name: 'newsletter', title: 'konstanth: Rundmail-Anmeldung', icon: 'email-alt', description: 'Anmeldung zu Themen und Einrichtungen mit Bestätigung per E-Mail.', newsletter: true }
   ];
@@ -26,6 +26,7 @@
       attributes.limit = { type: 'number', default: 12 };
       attributes.layout = { type: 'string', default: def.layout };
       attributes.heading = { type: 'string', default: '' };
+      if (def.search) { attributes.search = { type: 'boolean', default: true }; }
     }
     blocks.registerBlockType('konstanth/' + def.name, {
       apiVersion: 3,
@@ -53,6 +54,7 @@
             el(components.SelectControl, { key: 'layout', label: 'Anordnung', value: a.layout, options: [{ label: 'Liste', value: 'list' }, { label: 'Raster', value: 'grid' }], onChange: function (v) { set({ layout: v }); } }),
             el(components.TextControl, { key: 'heading', label: 'Überschrift (optional)', value: a.heading, onChange: function (v) { set({ heading: v }); } })
           );
+          if (def.search) { controls.push(el(components.ToggleControl, { key: 'search', label: 'Suchleiste anzeigen', checked: a.search !== false, onChange: function (v) { set({ search: !!v }); } })); }
         }
         return el('div', blockEditor.useBlockProps(),
           el(blockEditor.InspectorControls, null, el(components.PanelBody, { title: 'Einstellungen', initialOpen: true }, controls)),
